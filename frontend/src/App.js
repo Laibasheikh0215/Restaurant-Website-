@@ -19,6 +19,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMenu from './pages/admin/AdminMenu';
 import AdminLocations from './pages/admin/AdminLocations';
 import AdminBookings from './pages/admin/AdminBookings';
+import OrderTrackingPage from './pages/user/OrderTrackingPage';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -42,7 +43,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            
+            <Route path="/track-order/:orderId" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} />
             {/* User Routes */}
             <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
