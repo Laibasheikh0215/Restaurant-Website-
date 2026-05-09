@@ -106,6 +106,21 @@ function MyBookingsPage() {
           >
             Event Bookings
           </button>
+          {booking.status === 'confirmed' && (
+    <button
+        onClick={() => navigate(`/event-guests/${booking.id}`)}
+        style={{
+            background: '#8b5cf6',
+            color: 'white',
+            padding: '8px 15px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+        }}
+    >
+        👥 Manage Guests
+    </button>
+)}
         </div>
         
         {/* Food Orders */}

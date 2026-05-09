@@ -8,6 +8,9 @@ const pool = require('./config/database');
 const { authMiddleware, adminMiddleware } = require('./middleware/auth');
 const { sendConfirmationEmail } = require('./utils/email');
 require('dotenv').config();
+const multer = require('multer');
+const path = require('path');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +20,27 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
+
+
+//Configure Cloudinary (optional - for production)
+// For now, use local storage
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname))
+    }
+});
+
+const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+
+// Create uploads folder if not exists
+const fs = require('fs');
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
+
 
 app.use(cors());
 app.use(express.json());
@@ -661,4 +685,157 @@ app.get('/api/table-bookings/date/:date', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});app.post('/api/admin/event-locations', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
+    try {
+        const { name, address, capacity, description, price_per_person } = req.body;
+        const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+        
+        const result = await pool.query(
+            `INSERT INTO event_locations (name, address, capacity, description, price_per_person, image_url, is_active) 
+             VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *`,
+            [name, address, capacity, description, price_per_person, image_url]
+        );
+        
+        res.json({ success: true, location: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
+
+// Get events with bookings count
+app.get('/api/event-locations/with-bookings', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT el.*, 
+             COUNT(eb.id) as total_bookings,
+             SUM(eb.number_of_guests) as total_guests
+             FROM event_locations el
+             LEFT JOIN event_bookings eb ON el.id = eb.event_location_id AND eb.status = 'confirmed'
+             GROUP BY el.id
+             ORDER BY el.name`
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get events by date range (for calendar)
+app.get('/api/event-bookings/calendar', async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+        
+        const result = await pool.query(
+            `SELECT eb.*, el.name as location_name, el.address, el.image_url
+             FROM event_bookings eb
+             JOIN event_locations el ON eb.event_location_id = el.id
+             WHERE eb.booking_date BETWEEN $1 AND $2
+             AND eb.status = 'confirmed'
+             ORDER BY eb.booking_date`,
+            [start_date, end_date]
+        );
+        
+        // Format for calendar
+        const events = result.rows.map(event => ({
+            id: event.id,
+            title: `${event.event_name || event.location_name} (${event.number_of_guests} guests)`,
+            start: event.booking_date,
+            end: event.booking_date,
+            location: event.location_name,
+            guests: event.number_of_guests,
+            total_amount: event.total_amount
+        }));
+        
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add guest to event booking
+app.post('/api/event-bookings/:id/guests', authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const { name, email, phone, dietary_restrictions } = req.body;
+        
+        // Check if user owns this booking
+        const checkResult = await pool.query(
+            'SELECT * FROM event_bookings WHERE id = $1 AND user_id = $2',
+            [bookingId, req.user.id]
+        );
+        
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Create guest list table if not exists
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS event_guests (
+                id SERIAL PRIMARY KEY,
+                event_booking_id INTEGER REFERENCES event_bookings(id),
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(255),
+                phone VARCHAR(20),
+                dietary_restrictions TEXT,
+                attended BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        const result = await pool.query(
+            `INSERT INTO event_guests (event_booking_id, name, email, phone, dietary_restrictions)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [bookingId, name, email, phone, dietary_restrictions]
+        );
+        
+        res.json({ success: true, guest: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all guests for an event
+app.get('/api/event-bookings/:id/guests', authMiddleware, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        
+        // Create table if not exists
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS event_guests (
+                id SERIAL PRIMARY KEY,
+                event_booking_id INTEGER REFERENCES event_bookings(id),
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(255),
+                phone VARCHAR(20),
+                dietary_restrictions TEXT,
+                attended BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        const result = await pool.query(
+            'SELECT * FROM event_guests WHERE event_booking_id = $1 ORDER BY name',
+            [bookingId]
+        );
+        
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete guest from event
+app.delete('/api/event-guests/:id', authMiddleware, async (req, res) => {
+    try {
+        const guestId = req.params.id;
+        
+        await pool.query('DELETE FROM event_guests WHERE id = $1', [guestId]);
+        
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Serve uploaded images
+app.use('/uploads', express.static('uploads'));
