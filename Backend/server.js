@@ -1392,3 +1392,172 @@ app.get(
     }
   },
 );
+
+// ============ SOCIAL LOGIN (Google) ============
+app.post('/api/auth/social-login', async (req, res) => {
+    try {
+        const { email, full_name, provider, provider_id } = req.body;
+        
+        // Check if user exists
+        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        
+        if (result.rows.length === 0) {
+            // Create new user
+            const randomPassword = Math.random().toString(36).slice(-8);
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+            
+            result = await pool.query(
+                `INSERT INTO users (email, password_hash, full_name, role, phone) 
+                 VALUES ($1, $2, $3, $4, $5) 
+                 RETURNING id, email, full_name, role`,
+                [email, hashedPassword, full_name, 'customer', '']
+            );
+        }
+        
+        const user = result.rows[0];
+        
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.json({ 
+            success: true, 
+            token, 
+            user: { 
+                id: user.id, 
+                email: user.email, 
+                full_name: user.full_name, 
+                role: user.role 
+            } 
+        });
+    } catch (error) {
+        console.error('Social login error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ FORGOT PASSWORD ============
+
+// Forgot password - send reset email
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        console.log('Forgot password request for:', email);
+        
+        const result = await pool.query('SELECT id, email, full_name FROM users WHERE email = $1', [email]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found with this email' });
+        }
+        
+        const user = result.rows[0];
+        
+        // Generate reset token (valid for 1 hour)
+        const resetToken = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        
+        // Reset link
+        const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+        
+        // Email HTML
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #4c1d95;">Password Reset Request</h2>
+                <p>Dear ${user.full_name},</p>
+                <p>We received a request to reset your password. Click the button below to create a new password:</p>
+                <a href="${resetLink}" style="display: inline-block; background: #4c1d95; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+                <p>This link will expire in <strong>1 hour</strong>.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <hr>
+                <p style="font-size: 12px; color: #6b7280;">Restaurant Management System</p>
+            </div>
+        `;
+        
+        await sendConfirmationEmail(user.email, 'Password Reset Request', emailHtml);
+        
+        res.json({ success: true, message: 'Password reset email sent successfully' });
+        
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reset password with token
+app.post('/api/auth/reset-password/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { new_password } = req.body;
+        
+        console.log('Reset password request received');
+        
+        // Verify token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ error: 'Invalid or expired token' });
+        }
+        
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        
+        // Update password
+        await pool.query(
+            'UPDATE users SET password_hash = $1 WHERE id = $2',
+            [hashedPassword, decoded.id]
+        );
+        
+        res.json({ success: true, message: 'Password reset successful! Please login with new password.' });
+        
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ UPDATE PROFILE ============
+app.put('/api/auth/update-profile', authMiddleware, async (req, res) => {
+    try {
+        const { full_name, email, phone } = req.body;
+        const userId = req.user.id;
+        
+        console.log('Updating profile for user:', userId);
+        console.log('New data:', { full_name, email, phone });
+        
+        // Check if email already taken by another user
+        const emailCheck = await pool.query(
+            'SELECT id FROM users WHERE email = $1 AND id != $2',
+            [email, userId]
+        );
+        
+        if (emailCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Email already taken by another user' });
+        }
+        
+        const result = await pool.query(
+            `UPDATE users 
+             SET full_name = $1, email = $2, phone = $3, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $4
+             RETURNING id, email, full_name, phone, role, created_at`,
+            [full_name, email, phone, userId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json({ success: true, user: result.rows[0] });
+        
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});

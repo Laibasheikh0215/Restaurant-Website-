@@ -27,6 +27,8 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import OrderTrackingPage from "./pages/user/OrderTrackingPage";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminReports from "./pages/admin/AdminReports";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 // Protected route wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -60,6 +62,11 @@ function App() {
                   <OrderTrackingPage />
                 </ProtectedRoute>
               }
+            />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
             />
             {/* User Routes */}
             <Route
