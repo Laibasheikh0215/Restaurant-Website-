@@ -28,6 +28,12 @@ app.use(express.json());
 const compression = require('compression');
 app.use(compression());
 
+const { 
+    saveSubscription, 
+    sendNotification, 
+    sendNotificationToAll 
+} = require('./utils/notifications');
+
 // ============ FILE UPLOAD SETUP ============
 const uploadDir = "./uploads";
 if (!fs.existsSync(uploadDir)) {
@@ -1611,3 +1617,64 @@ const cacheControl = (duration) => {
 app.get('/api/menu', cacheControl(3600), async (req, res) => {
     // ... code
 });
+
+// Save push subscription
+app.post('/api/notifications/subscribe', authMiddleware, async (req, res) => {
+    try {
+        const subscription = req.body;
+        saveSubscription(req.user.id, subscription);
+        res.json({ success: true, message: 'Subscribed to notifications' });
+    } catch (error) {
+        console.error('Subscription error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Unsubscribe
+app.post('/api/notifications/unsubscribe', authMiddleware, async (req, res) => {
+    try {
+        // Remove subscription logic here
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Test notification
+app.post('/api/notifications/test', authMiddleware, async (req, res) => {
+    try {
+        await sendNotification(req.user.id, 'Test Notification', 'This is a test notification!');
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update order status with notification
+
+// Booking reminder (cron job)
+const scheduleReminders = async () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    // Get tomorrow's bookings
+    const bookings = await pool.query(
+        `SELECT tb.*, u.id as user_id, u.full_name 
+         FROM table_bookings tb 
+         JOIN users u ON tb.user_id = u.id 
+         WHERE tb.booking_date = $1 AND tb.status = 'confirmed'`,
+        [tomorrowStr]
+    );
+    
+    for (const booking of bookings.rows) {
+        await sendNotification(
+            booking.user_id,
+            'Table Booking Reminder',
+            `You have a table booking tomorrow at ${booking.booking_time} for ${booking.party_size} guests`
+        );
+    }
+};
+
+// Run reminders every hour
+setInterval(scheduleReminders, 60 * 60 * 1000);

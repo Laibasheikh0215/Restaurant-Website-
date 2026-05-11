@@ -37,27 +37,43 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
- const login = async (email, password) => {
-  try {
-    const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-    const { token, user } = response.data;
-    
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser(user);
-    
-    toast.success('Login successful!');
-    
-    // ⚠️ Temporary - redirect hatao
-    // window.location.href = user.role === 'admin' ? '/admin' : '/';
-    
-    return true;
-  } catch (error) {
-    toast.error(error.response?.data?.error || 'Login failed');
-    return false;
-  }
+const login = async (email, password, navigate) => {
+    try {
+        const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+        const { token, user } = response.data;
+        
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(user);
+        
+        toast.success('Login successful!');
+        
+        // ✅ Auto request notification permission after 2 seconds
+        setTimeout(async () => {
+            try {
+                const { requestNotificationPermission } = await import('../services/notificationService');
+                const granted = await requestNotificationPermission();
+                if (granted) {
+                    console.log('Notifications enabled successfully');
+                }
+            } catch (notifError) {
+                console.log('Notification service not available:', notifError.message);
+            }
+        }, 2000);
+        
+        // Redirect based on role
+        if (user.role === 'admin') {
+            navigate('/admin');
+        } else {
+            navigate('/');
+        }
+        
+        return true;
+    } catch (error) {
+        toast.error(error.response?.data?.error || 'Login failed');
+        return false;
+    }
 };
-  
   const register = async (userData) => {
     try {
       const response = await axios.post(

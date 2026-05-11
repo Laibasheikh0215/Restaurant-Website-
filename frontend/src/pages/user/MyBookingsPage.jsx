@@ -12,58 +12,71 @@ function MyBookingsPage() {
   const [eventBookings, setEventBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
   const [loading, setLoading] = useState(true);
-  const [processingPayment, setProcessingPayment] = useState(null);
-const [page, setPage] = useState(1);
-const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchData();
-  }, [page]);
+    fetchAllData();
+  }, []);
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.log('No token found');
+      setLoading(false);
+      return;
+    }
+    
     try {
-        const [ordersRes, tableRes, eventRes] = await Promise.all([
-            axios.get(`http://localhost:5000/api/orders/my-orders?page=${page}&limit=5`),
-            axios.get('http://localhost:5000/api/table-bookings/my-bookings'),
-            axios.get('http://localhost:5000/api/event-bookings/my-bookings')
-        ]);
-        setOrders(ordersRes.data.data || []);
-        setTotalPages(ordersRes.data.totalPages || 1);
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      console.log('Fetching data with token...');
+      
+      // Fetch orders
+      const ordersResponse = await axios.get('http://localhost:5000/api/orders/my-orders', config);
+      console.log('Orders API response:', ordersResponse.data);
+      setOrders(ordersResponse.data || []);
+      
+      // Fetch table bookings
+      const tableResponse = await axios.get('http://localhost:5000/api/table-bookings/my-bookings', config);
+      console.log('Table bookings response:', tableResponse.data);
+      setTableBookings(tableResponse.data || []);
+      
+      // Fetch event bookings
+      const eventResponse = await axios.get('http://localhost:5000/api/event-bookings/my-bookings', config);
+      console.log('Event bookings response:', eventResponse.data);
+      setEventBookings(eventResponse.data || []);
+      
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error('Error fetching data:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error('Failed to load bookings');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfirmOrder = async (order) => {
-    setProcessingPayment(order.id);
-    
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/orders/${order.id}/confirm`,
-        {},
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      if (response.data.success) {
-        toast.success('Order confirmed! (Demo Mode)');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Confirmation error:', error);
-      toast.error('Failed to confirm order');
-    } finally {
-      setProcessingPayment(null);
-    }
-  };
-
-  if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f3f4f6' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner"></div>
+          <p style={{ marginTop: '20px', color: '#6b7280' }}>Loading your bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f3f4f6', padding: '40px 20px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '32px', textAlign: 'center', marginBottom: '30px' }}>My Bookings</h1>
+        <h1 style={{ fontSize: '32px', textAlign: 'center', marginBottom: '30px', color: '#4c1d95' }}>
+          My Bookings
+        </h1>
         
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -75,10 +88,11 @@ const [totalPages, setTotalPages] = useState(1);
               color: activeTab === 'orders' ? 'white' : '#333', 
               border: 'none', 
               borderRadius: '8px', 
-              cursor: 'pointer' 
+              cursor: 'pointer',
+              fontWeight: 'bold'
             }}
           >
-            Food Orders ({orders.length})
+            🍽️ Food Orders ({orders.length})
           </button>
           <button 
             onClick={() => setActiveTab('tables')} 
@@ -88,10 +102,11 @@ const [totalPages, setTotalPages] = useState(1);
               color: activeTab === 'tables' ? 'white' : '#333', 
               border: 'none', 
               borderRadius: '8px', 
-              cursor: 'pointer' 
+              cursor: 'pointer',
+              fontWeight: 'bold'
             }}
           >
-            Table Bookings ({tableBookings.length})
+            🪑 Table Bookings ({tableBookings.length})
           </button>
           <button 
             onClick={() => setActiveTab('events')} 
@@ -101,103 +116,77 @@ const [totalPages, setTotalPages] = useState(1);
               color: activeTab === 'events' ? 'white' : '#333', 
               border: 'none', 
               borderRadius: '8px', 
-              cursor: 'pointer' 
+              cursor: 'pointer',
+              fontWeight: 'bold'
             }}
           >
-            Event Bookings ({eventBookings.length})
+            🎉 Event Bookings ({eventBookings.length})
           </button>
         </div>
         
-        {/* Food Orders */}
+        {/* Food Orders Tab */}
         {activeTab === 'orders' && (
           <div>
             {orders.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: '15px', padding: '40px', textAlign: 'center' }}>
-                <p>No orders yet</p>
+              <div style={{ background: 'white', borderRadius: '15px', padding: '60px 40px', textAlign: 'center' }}>
+                <span style={{ fontSize: '60px' }}>🍽️</span>
+                <h3 style={{ marginTop: '20px', color: '#4c1d95' }}>No Orders Yet</h3>
+                <p style={{ color: '#6b7280', marginBottom: '20px' }}>You haven't placed any orders yet.</p>
                 <button 
-                  onClick={() => navigate('/menu')}
-                  style={{ 
-                    marginTop: '15px', 
-                    background: '#4c1d95', 
-                    color: 'white', 
-                    padding: '10px 20px', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    cursor: 'pointer' 
-                  }}
+                  onClick={() => navigate('/menu')} 
+                  style={{ background: '#4c1d95', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                 >
                   Browse Menu
                 </button>
               </div>
             ) : (
-              orders.map(order => (
-                <div key={order.id} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+              orders.map((order, index) => (
+                <div key={order.id || index} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
-                    <div><strong style={{ fontSize: '16px' }}>Order #{order.id}</strong></div>
-                    <div style={{ color: '#6b7280' }}>{new Date(order.created_at).toLocaleDateString()}</div>
+                    <div>
+                      <strong style={{ fontSize: '16px', color: '#4c1d95' }}>Order #{order.id}</strong>
+                    </div>
+                    <div style={{ color: '#6b7280' }}>
+                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'Date not available'}
+                    </div>
                   </div>
                   
                   <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '10px', paddingBottom: '10px' }}>
-                    {order.items?.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
-                        <span>{item.name} x{item.quantity}</span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    ))}
+                    {order.items && order.items.length > 0 ? (
+                      order.items.map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+                          <span>{item.name} x{item.quantity}</span>
+                          <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: '#6b7280', textAlign: 'center', padding: '10px' }}>No items found</p>
+                    )}
                   </div>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
                       <span style={{ 
-                        background: order.status === 'completed' || order.status === 'confirmed' ? '#10b981' : 
+                        background: order.status === 'completed' ? '#10b981' : 
+                                   order.status === 'confirmed' ? '#3b82f6' : 
                                    order.status === 'cancelled' ? '#ef4444' : '#f59e0b', 
                         color: 'white', 
                         padding: '4px 12px', 
                         borderRadius: '20px', 
-                        fontSize: '12px', 
-                        marginRight: '10px' 
+                        fontSize: '12px',
+                        marginRight: '10px'
                       }}>
-                        {order.status === 'confirmed' ? 'Confirmed' : order.status}
+                        {order.status || 'pending'}
                       </span>
                       <span style={{ fontWeight: 'bold' }}>Total: ${order.total_amount}</span>
                     </div>
                     
-                    {/* Track Order Button */}
-                    <button
-                      onClick={() => navigate(`/track-order/${order.id}`)}
-                      style={{
-                        background: '#3b82f6',
-                        color: 'white',
-                        padding: '8px 15px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px'
-                      }}
+                    <button 
+                      onClick={() => navigate(`/track-order/${order.id}`)} 
+                      style={{ background: '#3b82f6', color: 'white', padding: '8px 15px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                     >
                       📍 Track Order
                     </button>
-                    
-                    {/* Confirm Button - Show only for pending orders */}
-                    {order.status === 'pending' && (
-                      <button
-                        onClick={() => handleConfirmOrder(order)}
-                        disabled={processingPayment === order.id}
-                        style={{
-                          background: '#10b981',
-                          color: 'white',
-                          padding: '8px 20px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {processingPayment === order.id ? 'Confirming...' : '✅ Confirm Order'}
-                      </button>
-                    )}
                   </div>
                 </div>
               ))
@@ -205,102 +194,57 @@ const [totalPages, setTotalPages] = useState(1);
           </div>
         )}
         
-        {/* Table Bookings */}
+        {/* Table Bookings Tab */}
         {activeTab === 'tables' && (
           <div>
             {tableBookings.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: '15px', padding: '40px', textAlign: 'center' }}>
-                <p>No table bookings yet</p>
+              <div style={{ background: 'white', borderRadius: '15px', padding: '60px 40px', textAlign: 'center' }}>
+                <span style={{ fontSize: '60px' }}>🪑</span>
+                <h3 style={{ marginTop: '20px', color: '#4c1d95' }}>No Table Bookings</h3>
+                <p style={{ color: '#6b7280', marginBottom: '20px' }}>You haven't booked any tables yet.</p>
                 <button 
-                  onClick={() => navigate('/table-booking')}
-                  style={{ 
-                    marginTop: '15px', 
-                    background: '#4c1d95', 
-                    color: 'white', 
-                    padding: '10px 20px', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    cursor: 'pointer' 
-                  }}
+                  onClick={() => navigate('/table-booking')} 
+                  style={{ background: '#4c1d95', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                 >
                   Book a Table
                 </button>
               </div>
             ) : (
               tableBookings.map(booking => (
-                <div key={booking.id} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
-                    <div><strong style={{ fontSize: '16px' }}>Table Booking #{booking.id}</strong></div>
-                    <div style={{ color: '#6b7280' }}>{booking.booking_date}</div>
-                  </div>
-                  <div style={{ marginBottom: '10px' }}>
-                    <div><strong>Time:</strong> {booking.booking_time}</div>
-                    <div><strong>Party Size:</strong> {booking.party_size} guests</div>
-                    {booking.table_number && <div><strong>Table Number:</strong> {booking.table_number}</div>}
-                  </div>
-                  <div>
-                    <span style={{ 
-                      background: booking.status === 'confirmed' ? '#10b981' : 
-                                 booking.status === 'cancelled' ? '#ef4444' : '#f59e0b', 
-                      color: 'white', 
-                      padding: '4px 12px', 
-                      borderRadius: '20px', 
-                      fontSize: '12px' 
-                    }}>
-                      {booking.status}
-                    </span>
-                  </div>
+                <div key={booking.id} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px' }}>
+                  <h3>Table Booking #{booking.id}</h3>
+                  <p>Date: {booking.booking_date}</p>
+                  <p>Time: {booking.booking_time}</p>
+                  <p>Party Size: {booking.party_size}</p>
+                  <p>Status: {booking.status}</p>
                 </div>
               ))
             )}
           </div>
         )}
         
-        {/* Event Bookings */}
+        {/* Event Bookings Tab */}
         {activeTab === 'events' && (
           <div>
             {eventBookings.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: '15px', padding: '40px', textAlign: 'center' }}>
-                <p>No event bookings yet</p>
+              <div style={{ background: 'white', borderRadius: '15px', padding: '60px 40px', textAlign: 'center' }}>
+                <span style={{ fontSize: '60px' }}>🎉</span>
+                <h3 style={{ marginTop: '20px', color: '#4c1d95' }}>No Event Bookings</h3>
+                <p style={{ color: '#6b7280', marginBottom: '20px' }}>You haven't booked any events yet.</p>
                 <button 
-                  onClick={() => navigate('/event-booking')}
-                  style={{ 
-                    marginTop: '15px', 
-                    background: '#4c1d95', 
-                    color: 'white', 
-                    padding: '10px 20px', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    cursor: 'pointer' 
-                  }}
+                  onClick={() => navigate('/event-booking')} 
+                  style={{ background: '#4c1d95', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                 >
                   Book an Event
                 </button>
               </div>
             ) : (
               eventBookings.map(booking => (
-                <div key={booking.id} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
-                    <div><strong style={{ fontSize: '16px' }}>{booking.event_name || booking.location_name}</strong></div>
-                    <div style={{ color: '#6b7280' }}>{booking.booking_date}</div>
-                  </div>
-                  <div style={{ marginBottom: '10px' }}>
-                    <div><strong>Location:</strong> {booking.location_name}</div>
-                    <div><strong>Guests:</strong> {booking.number_of_guests}</div>
-                    <div><strong>Total:</strong> ${booking.total_amount}</div>
-                  </div>
-                  <div>
-                    <span style={{ 
-                      background: booking.status === 'confirmed' ? '#10b981' : 
-                                 booking.status === 'cancelled' ? '#ef4444' : '#f59e0b', 
-                      color: 'white', 
-                      padding: '4px 12px', 
-                      borderRadius: '20px', 
-                      fontSize: '12px' 
-                    }}>
-                      {booking.status}
-                    </span>
-                  </div>
+                <div key={booking.id} style={{ background: 'white', borderRadius: '15px', padding: '20px', marginBottom: '20px' }}>
+                  <h3>{booking.event_name || booking.location_name}</h3>
+                  <p>Date: {booking.booking_date}</p>
+                  <p>Guests: {booking.number_of_guests}</p>
+                  <p>Total: ${booking.total_amount}</p>
                 </div>
               ))
             )}
