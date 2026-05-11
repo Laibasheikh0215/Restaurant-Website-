@@ -13,21 +13,22 @@ function MyBookingsPage() {
   const [activeTab, setActiveTab] = useState('orders');
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(null);
+const [page, setPage] = useState(1);
+const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
-      const [ordersRes, tableRes, eventRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/orders/my-orders'),
-        axios.get('http://localhost:5000/api/table-bookings/my-bookings'),
-        axios.get('http://localhost:5000/api/event-bookings/my-bookings')
-      ]);
-      setOrders(ordersRes.data);
-      setTableBookings(tableRes.data);
-      setEventBookings(eventRes.data);
+        const [ordersRes, tableRes, eventRes] = await Promise.all([
+            axios.get(`http://localhost:5000/api/orders/my-orders?page=${page}&limit=5`),
+            axios.get('http://localhost:5000/api/table-bookings/my-bookings'),
+            axios.get('http://localhost:5000/api/event-bookings/my-bookings')
+        ]);
+        setOrders(ordersRes.data.data || []);
+        setTotalPages(ordersRes.data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {
@@ -39,7 +40,6 @@ function MyBookingsPage() {
     setProcessingPayment(order.id);
     
     try {
-      // Demo confirmation
       const response = await axios.put(
         `http://localhost:5000/api/orders/${order.id}/confirm`,
         {},
@@ -48,7 +48,7 @@ function MyBookingsPage() {
       
       if (response.data.success) {
         toast.success('Order confirmed! (Demo Mode)');
-        fetchData(); // Refresh the list
+        fetchData();
       }
     } catch (error) {
       console.error('Confirmation error:', error);
@@ -78,7 +78,7 @@ function MyBookingsPage() {
               cursor: 'pointer' 
             }}
           >
-            Food Orders
+            Food Orders ({orders.length})
           </button>
           <button 
             onClick={() => setActiveTab('tables')} 
@@ -91,7 +91,7 @@ function MyBookingsPage() {
               cursor: 'pointer' 
             }}
           >
-            Table Bookings
+            Table Bookings ({tableBookings.length})
           </button>
           <button 
             onClick={() => setActiveTab('events')} 
@@ -104,23 +104,8 @@ function MyBookingsPage() {
               cursor: 'pointer' 
             }}
           >
-            Event Bookings
+            Event Bookings ({eventBookings.length})
           </button>
-          {booking.status === 'confirmed' && (
-    <button
-        onClick={() => navigate(`/event-guests/${booking.id}`)}
-        style={{
-            background: '#8b5cf6',
-            color: 'white',
-            padding: '8px 15px',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-        }}
-    >
-        👥 Manage Guests
-    </button>
-)}
         </div>
         
         {/* Food Orders */}
@@ -177,7 +162,7 @@ function MyBookingsPage() {
                       <span style={{ fontWeight: 'bold' }}>Total: ${order.total_amount}</span>
                     </div>
                     
-                    {/* TRACK ORDER BUTTON */}
+                    {/* Track Order Button */}
                     <button
                       onClick={() => navigate(`/track-order/${order.id}`)}
                       style={{
@@ -212,18 +197,6 @@ function MyBookingsPage() {
                       >
                         {processingPayment === order.id ? 'Confirming...' : '✅ Confirm Order'}
                       </button>
-                    )}
-                    
-                    {order.status === 'confirmed' && (
-                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ Order Confirmed</span>
-                    )}
-                    
-                    {order.status === 'completed' && (
-                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ Completed</span>
-                    )}
-                    
-                    {order.status === 'cancelled' && (
-                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>✗ Cancelled</span>
                     )}
                   </div>
                 </div>
@@ -264,9 +237,8 @@ function MyBookingsPage() {
                     <div><strong>Time:</strong> {booking.booking_time}</div>
                     <div><strong>Party Size:</strong> {booking.party_size} guests</div>
                     {booking.table_number && <div><strong>Table Number:</strong> {booking.table_number}</div>}
-                    {booking.pre_order_total > 0 && <div><strong>Pre-order Total:</strong> ${booking.pre_order_total}</div>}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                  <div>
                     <span style={{ 
                       background: booking.status === 'confirmed' ? '#10b981' : 
                                  booking.status === 'cancelled' ? '#ef4444' : '#f59e0b', 
@@ -277,19 +249,6 @@ function MyBookingsPage() {
                     }}>
                       {booking.status}
                     </span>
-                    
-                    {booking.status === 'pending' && (
-                      <button
-                        onClick={() => toast.info('Table booking will be confirmed by admin')}
-                        style={{ background: '#f59e0b', color: 'white', padding: '8px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                      >
-                        ⏳ Pending Confirmation
-                      </button>
-                    )}
-                    
-                    {booking.status === 'confirmed' && (
-                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ Table Confirmed</span>
-                    )}
                   </div>
                 </div>
               ))
@@ -330,7 +289,7 @@ function MyBookingsPage() {
                     <div><strong>Guests:</strong> {booking.number_of_guests}</div>
                     <div><strong>Total:</strong> ${booking.total_amount}</div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                  <div>
                     <span style={{ 
                       background: booking.status === 'confirmed' ? '#10b981' : 
                                  booking.status === 'cancelled' ? '#ef4444' : '#f59e0b', 
@@ -341,19 +300,6 @@ function MyBookingsPage() {
                     }}>
                       {booking.status}
                     </span>
-                    
-                    {booking.status === 'pending' && (
-                      <button
-                        onClick={() => toast.info('Event booking will be confirmed by admin')}
-                        style={{ background: '#f59e0b', color: 'white', padding: '8px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                      >
-                        ⏳ Pending Confirmation
-                      </button>
-                    )}
-                    
-                    {booking.status === 'confirmed' && (
-                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ Event Confirmed</span>
-                    )}
                   </div>
                 </div>
               ))

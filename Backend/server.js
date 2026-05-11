@@ -24,6 +24,10 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
+// Enable gzip compression for all responses
+const compression = require('compression');
+app.use(compression());
+
 // ============ FILE UPLOAD SETUP ============
 const uploadDir = "./uploads";
 if (!fs.existsSync(uploadDir)) {
@@ -1560,4 +1564,50 @@ app.put('/api/auth/update-profile', authMiddleware, async (req, res) => {
         console.error('Profile update error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Orders with pagination
+app.get('/api/orders/my-orders', authMiddleware, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        const result = await pool.query(
+            `SELECT o.*, 
+             COALESCE(json_agg(json_build_object('name', mi.name, 'quantity', oi.quantity, 'price', oi.price)) FILTER (WHERE mi.id IS NOT NULL), '[]') as items 
+             FROM orders o 
+             LEFT JOIN order_items oi ON o.id = oi.order_id 
+             LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id 
+             WHERE o.user_id = $1 
+             GROUP BY o.id 
+             ORDER BY o.created_at DESC
+             LIMIT $2 OFFSET $3`,
+            [req.user.id, limit, offset]
+        );
+        
+        const countResult = await pool.query('SELECT COUNT(*) FROM orders WHERE user_id = $1', [req.user.id]);
+        
+        res.json({
+            data: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            page: page,
+            totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Cache middleware
+const cacheControl = (duration) => {
+    return (req, res, next) => {
+        res.set('Cache-Control', `public, max-age=${duration}`);
+        next();
+    };
+};
+
+// Use on GET endpoints
+app.get('/api/menu', cacheControl(3600), async (req, res) => {
+    // ... code
 });

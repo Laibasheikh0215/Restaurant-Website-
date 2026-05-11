@@ -11,33 +11,49 @@ import { CartProvider } from "./contexts/CartContext";
 import Navbar from "./components/Navbar";
 
 // Import all pages
-import HomePage from "./pages/user/HomePage";
-import MenuPage from "./pages/user/MenuPage";
-import CartPage from "./pages/user/CartPage";
-import CheckoutPage from "./pages/user/CheckoutPage";
-import TableBookingPage from "./pages/user/TableBookingPage";
-import EventBookingPage from "./pages/user/EventBookingPage";
-import MyBookingsPage from "./pages/user/MyBookingsPage";
-import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegisterPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminMenu from "./pages/admin/AdminMenu";
-import AdminLocations from "./pages/admin/AdminLocations";
-import AdminBookings from "./pages/admin/AdminBookings";
-import OrderTrackingPage from "./pages/user/OrderTrackingPage";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminReports from "./pages/admin/AdminReports";
-import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+const HomePage = lazy(() => import("./pages/user/HomePage"));
+const MenuPage = lazy(() => import("./pages/user/MenuPage"));
+const CartPage = lazy(() => import("./pages/user/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/user/CheckoutPage"));
+const TableBookingPage = lazy(() => import("./pages/user/TableBookingPage"));
+const EventBookingPage = lazy(() => import("./pages/user/EventBookingPage"));
+const MyBookingsPage = lazy(() => import("./pages/user/MyBookingsPage"));
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminMenu = lazy(() => import("./pages/admin/AdminMenu"));
+const AdminLocations = lazy(() => import("./pages/admin/AdminLocations"));
+const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
+const OrderTrackingPage = lazy(() => import("./pages/user/OrderTrackingPage"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const ForgotPasswordPage = lazy(
+  () => import("./pages/auth/ForgotPasswordPage"),
+);
+const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage"));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+    }}
+  >
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontSize: "40px" }}>🍽️</div>
+      <p>Loading...</p>
+    </div>
+  </div>
+);
 
 // Protected route wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
-    return (
-      <div style={{ textAlign: "center", padding: "50px" }}>Loading...</div>
-    );
+  if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/" />;
 
@@ -51,6 +67,14 @@ function App() {
         <Router>
           <Navbar />
           <Routes>
+            <Route
+              path="/"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <HomePage />
+                </Suspense>
+              }
+            />
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />

@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import axios from 'axios';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { debounce } from 'lodash';
+
+const MenuItem = memo(({ item, onAddToCart }) => (
+    <div style={{ background: 'white', borderRadius: '15px', padding: '20px' }}>
+        <h3>{item.name}</h3>
+        <p>{item.description}</p>
+        <button onClick={() => onAddToCart(item)}>Add to Cart</button>
+    </div>
+));
 
 function MenuPage() {
   const [menuItems, setMenuItems] = useState([]);
@@ -20,6 +29,25 @@ function MenuPage() {
   useEffect(() => {
     filterItems();
   }, [searchTerm, selectedCategory, menuItems]);
+
+  
+const debouncedSearch = useCallback(
+    debounce((value) => {
+        setSearchTerm(value);
+    }, 300),
+    []
+);
+
+const handleSearchChange = (e) => {
+    debouncedSearch(e.target.value);
+};
+
+// Input
+<input
+    type="text"
+    placeholder="Search..."
+    onChange={handleSearchChange}
+/>
 
   const fetchMenu = async () => {
     try {
@@ -61,6 +89,7 @@ function MenuPage() {
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Loading menu...</div>;
 
   return (
+    
     <div style={{ minHeight: '100vh', background: '#f3f4f6', padding: '40px 20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '36px', textAlign: 'center', marginBottom: '20px' }}>Our Menu 🍽️</h1>
