@@ -48,25 +48,14 @@ const login = async (email, password, navigate) => {
         
         toast.success('Login successful!');
         
-        // ✅ Auto request notification permission after 2 seconds
-        setTimeout(async () => {
-            try {
-                const { requestNotificationPermission } = await import('../services/notificationService');
-                const granted = await requestNotificationPermission();
-                if (granted) {
-                    console.log('Notifications enabled successfully');
-                }
-            } catch (notifError) {
-                console.log('Notification service not available:', notifError.message);
+        // ✅ Important: Force redirect after state update
+        setTimeout(() => {
+            if (user.role === 'admin') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/';
             }
-        }, 2000);
-        
-        // Redirect based on role
-        if (user.role === 'admin') {
-            navigate('/admin');
-        } else {
-            navigate('/');
-        }
+        }, 100);
         
         return true;
     } catch (error) {
@@ -74,6 +63,7 @@ const login = async (email, password, navigate) => {
         return false;
     }
 };
+
   const register = async (userData) => {
     try {
       const response = await axios.post(

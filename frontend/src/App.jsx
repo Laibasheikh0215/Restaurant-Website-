@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import Navbar from './components/Navbar';
 
-// Normal imports - NO lazy loading
+// Normal imports (no lazy loading for now)
 import HomePage from './pages/user/HomePage';
 import MenuPage from './pages/user/MenuPage';
 import CartPage from './pages/user/CartPage';
@@ -26,19 +26,16 @@ import AdminBookings from './pages/admin/AdminBookings';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReports from './pages/admin/AdminReports';
 
-// Loading component
-const LoadingSpinner = () => (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div className="spinner"></div>
-    </div>
-);
-
-// Protected route wrapper
+// Protected route wrapper - ONLY for authenticated pages
 const ProtectedRoute = ({ children, adminOnly = false }) => {
     const { user, loading } = useAuth();
     
-    if (loading) return <LoadingSpinner />;
+    if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
+    
+    // Not logged in - redirect to login
     if (!user) return <Navigate to="/login" />;
+    
+    // Admin only page but user is not admin
     if (adminOnly && user.role !== 'admin') return <Navigate to="/" />;
     
     return children;
@@ -51,14 +48,14 @@ function App() {
                 <Router>
                     <Navbar />
                     <Routes>
-                        {/* Public Routes */}
+                        {/* Public Routes - Anyone can access */}
+                        <Route path="/" element={<HomePage />} />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                         
-                        {/* User Routes */}
-                        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                        {/* Protected Routes - Need to be logged in */}
                         <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
                         <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                         <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
@@ -68,7 +65,7 @@ function App() {
                         <Route path="/track-order/:orderId" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                         
-                        {/* Admin Routes */}
+                        {/* Admin Routes - Need admin role */}
                         <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
                         <Route path="/admin/menu" element={<ProtectedRoute adminOnly={true}><AdminMenu /></ProtectedRoute>} />
                         <Route path="/admin/locations" element={<ProtectedRoute adminOnly={true}><AdminLocations /></ProtectedRoute>} />
