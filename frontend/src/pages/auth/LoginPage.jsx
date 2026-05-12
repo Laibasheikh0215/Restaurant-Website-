@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -7,7 +7,6 @@ function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,20 +18,22 @@ function LoginPage() {
         password 
       });
       
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        toast.success('Login successful!');
-        
-        // Use navigate instead of window.location
-        if (response.data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      }
+      console.log('Login response:', response.data);
+      
+     if (response.data.success) {
+    localStorage.setItem('token', response.data.token);
+    toast.success('Login successful!');
+    
+    // ✅ SIMPLE REDIRECT - WITHOUT http://localhost:3000
+    if (response.data.user.role === 'admin') {
+        window.location.href = '/admin';
+    } else {
+        window.location.href = '/';
+    }
+}
     } catch (error) {
+      console.error('Login error:', error.response?.data);
       toast.error(error.response?.data?.error || 'Login failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -55,11 +56,13 @@ function LoginPage() {
         localStorage.setItem('token', response.data.token);
         toast.success(`Welcome ${response.data.user.full_name}!`);
         
-        if (response.data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+        setTimeout(() => {
+          if (response.data.user.role === 'admin') {
+            window.location.href = 'http://localhost:3000/admin';
+          } else {
+            window.location.href = 'http://localhost:3000/';
+          }
+        }, 500);
       }
     } catch (error) {
       console.error('Google login error:', error);
@@ -85,11 +88,13 @@ function LoginPage() {
         localStorage.setItem('token', response.data.token);
         toast.success(`Welcome ${response.data.user.full_name}!`);
         
-        if (response.data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+        setTimeout(() => {
+          if (response.data.user.role === 'admin') {
+            window.location.href = 'http://localhost:3000/admin';
+          } else {
+            window.location.href = 'http://localhost:3000/';
+          }
+        }, 500);
       }
     } catch (error) {
       console.error('Facebook login error:', error);

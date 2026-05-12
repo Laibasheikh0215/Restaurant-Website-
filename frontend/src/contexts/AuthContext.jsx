@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-const login = async (email, password, navigate) => {
+const login = async (email, password) => {
     try {
         const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
         const { token, user } = response.data;
@@ -47,16 +47,6 @@ const login = async (email, password, navigate) => {
         setUser(user);
         
         toast.success('Login successful!');
-        
-        // ✅ Important: Force redirect after state update
-        setTimeout(() => {
-            if (user.role === 'admin') {
-                window.location.href = '/admin';
-            } else {
-                window.location.href = '/';
-            }
-        }, 100);
-        
         return true;
     } catch (error) {
         toast.error(error.response?.data?.error || 'Login failed');
