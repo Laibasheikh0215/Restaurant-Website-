@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
-//  SCROLL ANIMATION HOOK
-
+// SCROLL ANIMATION HOOK
 function useReveal(threshold = 0.15) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -24,9 +23,6 @@ function useReveal(threshold = 0.15) {
   }, [threshold]);
   return [ref, visible];
 }
-
-//  ANIMATED WRAPPER COMPONENT
-//    variant: 'fadeUp' | 'fadeLeft' | 'fadeRight' | 'fadeIn' | 'scaleUp'
 
 function Reveal({ children, variant = "fadeUp", delay = 0, style = {} }) {
   const [ref, visible] = useReveal();
@@ -51,19 +47,14 @@ function Reveal({ children, variant = "fadeUp", delay = 0, style = {} }) {
   );
 }
 
-//  GLOBAL CSS (injected once)
+// GLOBAL CSS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; }
 
   @keyframes heroSlideUp {
     from { opacity: 0; transform: translateY(36px); }
     to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes heroImgReveal {
-    from { opacity: 0; transform: translateX(60px) scale(0.96); }
-    to   { opacity: 1; transform: translateX(0) scale(1); }
   }
   @keyframes statCount {
     from { opacity: 0; transform: translateY(20px); }
@@ -73,16 +64,20 @@ const GLOBAL_CSS = `
     from { opacity: 0; transform: translateY(-20px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-  .hero-eyebrow  { animation: heroSlideUp    0.7s ease           0.1s  both; }
-  .hero-title    { animation: heroSlideUp    0.7s ease           0.25s both; }
-  .hero-desc     { animation: heroSlideUp    0.7s ease           0.4s  both; }
-  .hero-btns     { animation: heroSlideUp    0.7s ease           0.55s both; }
-  .hero-img-wrap { animation: heroImgReveal  0.9s cubic-bezier(0.22,1,0.36,1) 0.3s both; }
-  .hero-stat-0   { animation: statCount     0.6s ease           0.6s  both; }
-  .hero-stat-1   { animation: statCount     0.6s ease           0.75s both; }
-  .hero-stat-2   { animation: statCount     0.6s ease           0.9s  both; }
-  .nav-bar       { animation: navSlideDown  0.5s ease           0s    both; }
+  .hero-eyebrow { animation: heroSlideUp  0.7s ease 0.1s  both; }
+  .hero-title   { animation: heroSlideUp  0.7s ease 0.25s both; }
+  .hero-desc    { animation: heroSlideUp  0.7s ease 0.4s  both; }
+  .hero-btns    { animation: heroSlideUp  0.7s ease 0.55s both; }
+  .hero-stat-0  { animation: statCount   0.6s ease 0.6s  both; }
+  .hero-stat-1  { animation: statCount   0.6s ease 0.75s both; }
+  .hero-stat-2  { animation: statCount   0.6s ease 0.9s  both; }
+  .nav-bar      { animation: navSlideDown 0.5s ease 0s    both; }
+  .dropdown-menu { animation: dropdownFadeIn 0.2s ease both; }
 
   .btn-primary:hover   { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(232,68,26,0.55) !important; }
   .btn-outline:hover   { border-color: #E8441A !important; background: rgba(232,68,26,0.08) !important; }
@@ -90,10 +85,15 @@ const GLOBAL_CSS = `
   .nav-link:hover      { color: #fff !important; }
   .footer-link:hover   { color: rgba(255,255,255,0.7) !important; }
   .menu-card-btn:hover { background: rgba(232,68,26,0.15) !important; color: #E8441A !important; }
+  .nav-cart:hover      { color: #E8441A !important; transform: scale(1.15); }
+  .nav-avatar:hover    { opacity: 0.85; }
+  .dropdown-item:hover { background: rgba(232,68,26,0.08) !important; color: #E8441A !important; }
+  .dropdown-logout:hover { background: rgba(232,68,26,0.12) !important; color: #E8441A !important; }
+  .why-card:hover  { transform: translateY(-6px) !important; box-shadow: 0 20px 48px rgba(0,0,0,0.12) !important; }
+  .menu-card:hover { transform: translateY(-8px) !important; border-color: rgba(232,68,26,0.3) !important; }
 `;
 
-  //  STYLE OBJECTS
-
+// STYLES
 const S = {
   root: {
     fontFamily: "'Playfair Display','Georgia',serif",
@@ -102,12 +102,13 @@ const S = {
     overflowX: "hidden",
   },
 
+  /* NAV */
   nav: {
     position: "fixed",
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 100,
+    zIndex: 1000,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -138,6 +139,8 @@ const S = {
     textDecoration: "none",
     transition: "color 0.2s",
   },
+
+  /* Logged OUT */
   navCta: {
     background: "#E8441A",
     color: "#fff",
@@ -161,6 +164,117 @@ const S = {
     marginLeft: "12px",
   },
 
+  /* Logged IN */
+  navRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    position: "relative",
+  },
+  navCart: {
+    fontSize: "20px",
+    textDecoration: "none",
+    color: "rgba(255,255,255,0.8)",
+    display: "flex",
+    alignItems: "center",
+    transition: "color 0.2s, transform 0.2s",
+    position: "relative",
+  },
+  navAvatar: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    background: "#E8441A",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "14px",
+    fontWeight: "700",
+    color: "#fff",
+    cursor: "pointer",
+    userSelect: "none",
+    transition: "opacity 0.2s",
+  },
+  navAvatarWrapper: { position: "relative" },
+
+  /* Dropdown */
+  dropdown: {
+    position: "absolute",
+    top: "calc(100% + 14px)",
+    right: 0,
+    background: "#1a1a1a",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "14px",
+    padding: "8px",
+    minWidth: "200px",
+    boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+    zIndex: 200,
+  },
+  dropdownArrow: {
+    position: "absolute",
+    top: "-6px",
+    right: "14px",
+    width: "12px",
+    height: "12px",
+    background: "#1a1a1a",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRight: "none",
+    borderBottom: "none",
+    transform: "rotate(45deg)",
+  },
+  dropdownHeader: {
+    padding: "10px 14px 12px",
+    borderBottom: "1px solid rgba(255,255,255,0.07)",
+    marginBottom: "6px",
+  },
+  dropdownName: {
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: "2px",
+  },
+  dropdownEmail: {
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "12px",
+    color: "rgba(255,255,255,0.4)",
+  },
+  dropdownItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    textDecoration: "none",
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "14px",
+    color: "rgba(255,255,255,0.75)",
+    transition: "background 0.15s, color 0.15s",
+    cursor: "pointer",
+  },
+  dropdownDivider: {
+    height: "1px",
+    background: "rgba(255,255,255,0.07)",
+    margin: "6px 0",
+  },
+  dropdownLogout: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "14px",
+    color: "rgba(255,100,80,0.9)",
+    transition: "background 0.15s, color 0.15s",
+    cursor: "pointer",
+    background: "none",
+    border: "none",
+    width: "100%",
+  },
+
+  /* HERO */
   hero: {
     position: "relative",
     minHeight: "100vh",
@@ -176,7 +290,7 @@ const S = {
     position: "absolute",
     inset: 0,
     background:
-      "radial-gradient(ellipse 60% 80% at 70% 50%, rgba(232,68,26,0.08) 0%, transparent 70%)",
+      "linear-gradient(90deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.50) 60%, rgba(0,0,0,0.15) 100%)",
     pointerEvents: "none",
   },
   heroBrushStroke: {
@@ -220,7 +334,7 @@ const S = {
     fontFamily: "'DM Sans',sans-serif",
     fontSize: "16px",
     lineHeight: "1.75",
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.7)",
     marginBottom: "40px",
     maxWidth: "420px",
   },
@@ -251,33 +365,6 @@ const S = {
     display: "inline-block",
     transition: "border-color 0.2s, background 0.2s",
   },
-  heroImageWrap: {
-    position: "absolute",
-    right: "40px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: "50%",
-    maxWidth: "680px",
-    zIndex: 1,
-  },
-  heroImg: {
-    width: "100%",
-    marginTop: "-250px",
-    borderRadius: "24px",
-    objectFit: "cover",
-    maxHeight: "70vh",
-    filter: "brightness(0.9) saturate(1.1)",
-  },
-  heroImgFallback: {
-    width: "100%",
-    height: "500px",
-    borderRadius: "24px",
-    background: "linear-gradient(135deg,#1a1a1a 0%,#2d1a12 40%,#1a0d08 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "100px",
-  },
   heroStats: {
     position: "absolute",
     bottom: "120px",
@@ -302,6 +389,7 @@ const S = {
     color: "rgba(255,255,255,0.5)",
   },
 
+  /* WHY */
   whySection: { background: "#fff", color: "#111", padding: "80px 60px" },
   sectionHeader: { textAlign: "center", marginBottom: "56px" },
   sectionTag: {
@@ -365,6 +453,7 @@ const S = {
     color: "rgba(0,0,0,0.55)",
   },
 
+  /* MENU */
   menuSection: { background: "#0a0a0a", padding: "80px 60px" },
   menuSectionTitle: { color: "#fff" },
   menuSectionSub: { color: "rgba(255,255,255,0.45)" },
@@ -434,6 +523,7 @@ const S = {
     transition: "background 0.2s, color 0.2s",
   },
 
+  /* BOOKING */
   bookSection: {
     background: "#E8441A",
     padding: "72px 60px",
@@ -510,25 +600,8 @@ const S = {
     marginTop: "24px",
   },
 
+  /* CONTACT */
   contactSection: { background: "#fff", padding: "80px 60px", color: "#111" },
-  contactGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "60px",
-    maxWidth: "1000px",
-    margin: "0 auto",
-    alignItems: "start",
-  },
-  contactImgFallback: {
-    width: "100%",
-    height: "360px",
-    borderRadius: "20px",
-    background: "linear-gradient(135deg,#1e0e06 0%,#3d1a0a 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "80px",
-  },
   contactInfoTitle: {
     fontSize: "28px",
     fontWeight: "700",
@@ -568,24 +641,8 @@ const S = {
     alignItems: "center",
     gap: "8px",
   },
-  contactHourRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontFamily: "'DM Sans',sans-serif",
-    fontSize: "13px",
-    color: "rgba(0,0,0,0.6)",
-    padding: "6px 0",
-    borderBottom: "1px solid rgba(0,0,0,0.06)",
-  },
-  contactHourRowLast: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontFamily: "'DM Sans',sans-serif",
-    fontSize: "13px",
-    color: "rgba(0,0,0,0.6)",
-    padding: "6px 0",
-  },
 
+  /* FOOTER */
   footerBar: {
     background: "#0a0a0a",
     padding: "24px 60px",
@@ -610,7 +667,7 @@ const S = {
   },
 };
 
-  //  HOVER CARD
+// HOVER CARD
 function HoverCard({ style, hoverStyle, children }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -624,8 +681,7 @@ function HoverCard({ style, hoverStyle, children }) {
   );
 }
 
-  //  DATA
-
+// DATA
 const WHY_CARDS = [
   {
     icon: "🍣",
@@ -635,7 +691,7 @@ const WHY_CARDS = [
   {
     icon: "👨‍🍳",
     title: "Master Chefs",
-    desc: "Over 15 years of authentic multi-tradition cusine behind every dish we serve.",
+    desc: "Over 15 years of authentic multi-tradition cuisine behind every dish we serve.",
   },
   {
     icon: "🌿",
@@ -649,15 +705,14 @@ const WHY_CARDS = [
   },
 ];
 
-// DATA
-
 const MENU_ITEMS = [
   {
     tag: "Chef's Special",
     title: "Omakase Nigiri Set",
     desc: "Eight-piece chef's selection of the finest seasonal nigiri, served with house ponzu.",
     price: "$38",
-    image: "https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=600",
+    image:
+      "https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     tag: "Fan Favourite",
@@ -671,14 +726,120 @@ const MENU_ITEMS = [
     title: "Messy Double Patty Burger",
     desc: "Soft buns loaded with double patties, dripping sauce, and smoky flavor in every bite.",
     price: "$28",
-    image: "https://images.pexels.com/photos/2983101/pexels-photo-2983101.jpeg?auto=compress&cs=tinysrgb&w=600",
+    image:
+      "https://images.pexels.com/photos/2983101/pexels-photo-2983101.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
 ];
 
-  //  MAIN COMPONENT
+// ─── PROFILE DROPDOWN COMPONENT ───────────────────────────────────────────────
+function ProfileDropdown({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef(null);
 
+  // Close when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : (user?.email?.[0]?.toUpperCase() ?? "U");
+
+  const displayName = user?.name || "My Account";
+  const displayEmail = user?.email || "";
+
+  return (
+    <div ref={wrapperRef} style={S.navAvatarWrapper}>
+      {/* Avatar button — click to toggle dropdown */}
+      <div
+        className="nav-avatar"
+        style={S.navAvatar}
+        onClick={() => setOpen((prev) => !prev)}
+        title="My Profile"
+      >
+        {initials}
+      </div>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="dropdown-menu" style={S.dropdown}>
+          {/* Little arrow */}
+          <div style={S.dropdownArrow} />
+
+          {/* User info header */}
+          <div style={S.dropdownHeader}>
+            <div style={S.dropdownName}>{displayName}</div>
+            {displayEmail && <div style={S.dropdownEmail}>{displayEmail}</div>}
+          </div>
+
+          {/* Menu items */}
+          <Link
+            to="/profile"
+            className="dropdown-item"
+            style={S.dropdownItem}
+            onClick={() => setOpen(false)}
+          >
+            👤 &nbsp; My Profile
+          </Link>
+          <Link
+            to="/orders"
+            className="dropdown-item"
+            style={S.dropdownItem}
+            onClick={() => setOpen(false)}
+          >
+            🧾 &nbsp; My Orders
+          </Link>
+          <Link
+            to="/table-booking"
+            className="dropdown-item"
+            style={S.dropdownItem}
+            onClick={() => setOpen(false)}
+          >
+            📅 &nbsp; My Reservations
+          </Link>
+          <Link
+            to="/settings"
+            className="dropdown-item"
+            style={S.dropdownItem}
+            onClick={() => setOpen(false)}
+          >
+            ⚙️ &nbsp; Settings
+          </Link>
+
+          <div style={S.dropdownDivider} />
+
+          {/* Logout */}
+          <button
+            className="dropdown-logout"
+            style={S.dropdownLogout}
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+          >
+            🚪 &nbsp; Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
 function HomePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Inject global CSS once
   useEffect(() => {
@@ -693,14 +854,26 @@ function HomePage() {
     };
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   return (
     <div style={S.root}>
-      {/* ── NAV — slides down on page load ── */}
+      {/* ════════════════════════════════════════
+          NAV
+      ════════════════════════════════════════ */}
       <nav style={S.nav} className="nav-bar">
         <a href="/" style={S.navLogo}>
-          <span style={S.navLogoAccent}>美食家大廳</span> Epicure 
+          <span style={S.navLogoAccent}>美食家大廳</span> Epicure{" "}
           <span style={S.navLogoAccent}>Hall</span>
         </a>
+
         <ul style={S.navLinks}>
           {["Home", "Menu", "Reservations", "Events", "Contact"].map((l) => (
             <li key={l}>
@@ -710,24 +883,42 @@ function HomePage() {
             </li>
           ))}
         </ul>
-        <div>
-          <Link to="/login" style={S.navCta}>
-            Sign In
-          </Link>
-          <Link to="/register" style={S.navCtaOutline}>
-            Sign Up
-          </Link>
-        </div>
+
+        {/* ── RIGHT SIDE: changes based on auth state ── */}
+        {user ? (
+          // ✅ LOGGED IN → Cart icon + Profile dropdown
+          <div style={S.navRight}>
+            <Link
+              to="/cart"
+              className="nav-cart"
+              style={S.navCart}
+              title="My Cart"
+            >
+              🛒
+            </Link>
+            <ProfileDropdown user={user} onLogout={handleLogout} />
+          </div>
+        ) : (
+          // ❌ LOGGED OUT → Sign In + Sign Up
+          <div>
+            <Link to="/login" style={S.navCta}>
+              Sign In
+            </Link>
+            <Link to="/register" style={S.navCtaOutline}>
+              Sign Up
+            </Link>
+          </div>
+        )}
       </nav>
 
-      {/* HERO  CSS keyframe animations on mount */}
+      {/* ════════════════════════════════════════
+          HERO
+      ════════════════════════════════════════ */}
       <section style={S.hero}>
         <div style={S.heroOverlay} />
-
         <div style={S.heroContent}>
           <div className="hero-eyebrow" style={S.heroEyebrow}>
-            <span style={S.heroEyebrowLine} />
-            A world of flavors under one roof
+            <span style={S.heroEyebrowLine} />A world of flavors under one roof
           </div>
           <h1 className="hero-title" style={S.heroTitle}>
             Epicure Hall
@@ -738,6 +929,8 @@ function HomePage() {
             A transcendent dining journey — where centuries-old Japanese
             craftsmanship meets contemporary elegance in every single bite.
           </p>
+
+          {/* Same logic as the 33-line original code */}
           <div className="hero-btns" style={S.heroBtns}>
             {user ? (
               <>
@@ -749,7 +942,7 @@ function HomePage() {
                   className="btn-outline"
                   style={S.btnOutline}
                 >
-                  Book a Table
+                  Book Table
                 </Link>
               </>
             ) : (
@@ -769,12 +962,6 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Hero image — slides in from right */}
-        <div className="hero-img-wrap" style={S.heroImageWrap}>
-          <div style={{ ...S.heroImgFallback, display: "none" }}>🍣</div>
-        </div>
-
-        {/* Stats — staggered fade up */}
         <div style={S.heroStats}>
           {[
             ["500+", "Dishes Served Daily"],
@@ -787,11 +974,12 @@ function HomePage() {
             </div>
           ))}
         </div>
-
         <div style={S.heroBrushStroke} />
       </section>
 
-      {/* WHY CHOOSE US scroll reveal */}
+      {/* ════════════════════════════════════════
+          WHY CHOOSE US
+      ════════════════════════════════════════ */}
       <section style={S.whySection}>
         <Reveal variant="fadeUp">
           <div style={S.sectionHeader}>
@@ -803,7 +991,6 @@ function HomePage() {
             </p>
           </div>
         </Reveal>
-
         <div style={S.whyGrid}>
           {WHY_CARDS.map((c, i) => (
             <Reveal key={c.title} variant="fadeUp" delay={i * 100}>
@@ -823,7 +1010,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* OUR MENU scroll reveal with scale */}
+      {/* ════════════════════════════════════════
+          MENU
+      ════════════════════════════════════════ */}
       <section style={S.menuSection}>
         <Reveal variant="fadeUp">
           <div style={S.sectionHeader}>
@@ -837,7 +1026,6 @@ function HomePage() {
             </p>
           </div>
         </Reveal>
-
         <div style={S.menuGrid}>
           {MENU_ITEMS.map((item, i) => (
             <Reveal key={item.title} variant="scaleUp" delay={i * 120}>
@@ -848,17 +1036,22 @@ function HomePage() {
                   borderColor: "rgba(232,68,26,0.3)",
                 }}
               >
-<div style={S.menuCardImgFallback}>
-  {item.image ? (
-    <img 
-      src={item.image} 
-      alt={item.title} 
-      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-    />
-  ) : (
-    <span style={{ fontSize: '64px' }}>{item.emoji}</span>
-  )}
-</div>                <div style={S.menuCardBody}>
+                <div style={S.menuCardImgFallback}>
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: "64px" }}>{item.emoji}</span>
+                  )}
+                </div>
+                <div style={S.menuCardBody}>
                   <div style={S.menuCardTag}>{item.tag}</div>
                   <div style={S.menuCardTitle}>{item.title}</div>
                   <div style={S.menuCardDesc}>{item.desc}</div>
@@ -879,7 +1072,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* BOOKING BANNER slide in from opposite sides */}
+      {/* ════════════════════════════════════════
+          BOOKING BANNER
+      ════════════════════════════════════════ */}
       <section style={S.bookSection}>
         <Reveal variant="fadeRight" style={{ maxWidth: "45%", order: 1 }}>
           <img
@@ -900,7 +1095,7 @@ function HomePage() {
             <h2 style={S.bookTitle}>
               Make Your Booking,
               <br />
-              Your Sushi Counts
+              Your food Counts
             </h2>
             <p style={S.bookDesc}>
               Reserve your table online in seconds. Special occasions, intimate
@@ -941,104 +1136,116 @@ function HomePage() {
         </Reveal>
       </section>
 
-      {/* CONTACT */}
-<section style={S.contactSection}>
-  <Reveal variant="fadeUp">
-    <div style={S.sectionHeader}>
-      <div style={S.sectionTag}>Find Us</div>
-      <h2 style={S.sectionTitle}>Contact &amp; Details</h2>
-      <p style={S.sectionSub}>
-        We'd love to have you. Here's everything you need to visit or reach us.
-      </p>
-    </div>
-  </Reveal>
-
-  <div style={{
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '60px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    alignItems: 'center'
-  }}>
-    {/* Video Section - Left Side */}
-    <Reveal variant="fadeLeft">
-      <div style={{
-        width: '100%',
-        overflow: 'hidden',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
-      }}>
-        <video 
-          src="/Assets/CC video.mp4" 
-          autoPlay 
-          loop 
-          playsInline
-          style={{ 
-            width: '100%', 
-            height: '350px', 
-            objectFit: 'cover',
-            display: 'block'
-          }}
-        />
-      </div>
-    </Reveal>
-
-    {/* Contact Info - Right Side */}
-    <Reveal variant="fadeRight" delay={150}>
-      <div>
-        <div style={S.contactInfoTitle}>Epicure Hall · Main Branch</div>
-        <div style={S.contactInfoSub}>
-          A welcoming space where great food and warm hospitality come together.
-        </div>
-        
-        {/* Contact Details */}
-        <div style={{ marginBottom: '30px' }}>
-          {[
-            ["📍", "12 Sakura Lane, Karachi, PK"],
-            ["📞", "+92 21 3456 7890"],
-            ["✉️", "hello@epicurehall.com"],
-            ["🌐", "www.epicurehall.com"],
-          ].map(([icon, text]) => (
-            <div key={text} style={S.contactRow}>
-              <span style={{ fontSize: "20px", width: "30px" }}>{icon}</span>
-              <span style={S.contactText}>{text}</span>
-            </div>
-          ))}
-        </div>
-        
-        {/* Opening Hours */}
-        <div style={S.contactHours}>
-          <div style={S.contactHoursTitle}>
-            <span style={{ color: "#E8441A", fontSize: "20px" }}>🕐</span> 
-            <span style={{ marginLeft: '8px' }}>Opening Hours</span>
+      {/* ════════════════════════════════════════
+          CONTACT
+      ════════════════════════════════════════ */}
+      <section style={S.contactSection}>
+        <Reveal variant="fadeUp">
+          <div style={S.sectionHeader}>
+            <div style={S.sectionTag}>Find Us</div>
+            <h2 style={S.sectionTitle}>Contact &amp; Details</h2>
+            <p style={S.sectionSub}>
+              We'd love to have you. Here's everything you need to visit or
+              reach us.
+            </p>
           </div>
-          {[
-            ["Monday – Thursday", "11:30 – 22:00"],
-            ["Friday – Saturday", "11:30 – 23:30"],
-            ["Sunday", "12:00 – 21:00"],
-          ].map(([day, time], i, arr) => (
+        </Reveal>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "60px",
+            maxWidth: "1200px",
+            margin: "0 auto",
+            alignItems: "center",
+          }}
+        >
+          <Reveal variant="fadeLeft">
             <div
-              key={day}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontFamily: "'DM Sans',sans-serif",
-                fontSize: '14px',
-                color: 'rgba(0,0,0,0.6)',
-                padding: '10px 0',
-                borderBottom: i === arr.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.06)'
+                width: "100%",
+                overflow: "hidden",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
               }}
             >
-              <span style={{ fontWeight: '500' }}>{day}</span>
-              <span style={{ fontWeight: '600', color: '#111' }}>{time}</span>
+              <video
+                src="/Assets/CC video.mp4"
+                autoPlay
+                loop
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "350px",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
             </div>
-          ))}
+          </Reveal>
+
+          <Reveal variant="fadeRight" delay={150}>
+            <div>
+              <div style={S.contactInfoTitle}>Epicure Hall · Main Branch</div>
+              <div style={S.contactInfoSub}>
+                A welcoming space where great food and warm hospitality come
+                together.
+              </div>
+              <div style={{ marginBottom: "30px" }}>
+                {[
+                  ["📍", "12 Sakura Lane, Karachi, PK"],
+                  ["📞", "+92 21 3456 7890"],
+                  ["✉️", "hello@epicurehall.com"],
+                  ["🌐", "www.epicurehall.com"],
+                ].map(([icon, text]) => (
+                  <div key={text} style={S.contactRow}>
+                    <span style={{ fontSize: "20px", width: "30px" }}>
+                      {icon}
+                    </span>
+                    <span style={S.contactText}>{text}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={S.contactHours}>
+                <div style={S.contactHoursTitle}>
+                  <span style={{ color: "#E8441A", fontSize: "20px" }}>🕐</span>
+                  <span style={{ marginLeft: "8px" }}>Opening Hours</span>
+                </div>
+                {[
+                  ["Monday – Thursday", "11:30 – 22:00"],
+                  ["Friday – Saturday", "11:30 – 23:30"],
+                  ["Sunday", "12:00 – 21:00"],
+                ].map(([day, time], i, arr) => (
+                  <div
+                    key={day}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontFamily: "'DM Sans',sans-serif",
+                      fontSize: "14px",
+                      color: "rgba(0,0,0,0.6)",
+                      padding: "10px 0",
+                      borderBottom:
+                        i === arr.length - 1
+                          ? "none"
+                          : "1px solid rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <span style={{ fontWeight: "500" }}>{day}</span>
+                    <span style={{ fontWeight: "600", color: "#111" }}>
+                      {time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
-      </div>
-    </Reveal>
-  </div>
-</section>
-      {/* FOOTER */}
+      </section>
+
+      {/* ════════════════════════════════════════
+          FOOTER
+      ════════════════════════════════════════ */}
       <Reveal variant="fadeIn">
         <footer style={S.footerBar}>
           <span style={S.footerText}>
