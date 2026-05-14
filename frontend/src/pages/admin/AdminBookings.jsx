@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
+// GLOBAL CSS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }
@@ -105,7 +105,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-/* ─── STATUS HELPERS ─────────────────────────────────────────────────────── */
+//STATUS HELPERS
 const STATUS_STYLES = {
   pending: { bg: "rgba(245,158,11,0.12)", color: "#f59e0b" },
   confirmed: { bg: "rgba(59,130,246,0.12)", color: "#60a5fa" },
@@ -120,14 +120,14 @@ const badgeStyle = (status) =>
     color: "rgba(255,255,255,0.5)",
   };
 
-/* ─── TABS CONFIG ─────────────────────────────────────────────────────────── */
+//TABS CONFIG
 const TABS = [
   { key: "table", icon: "🪑", label: "Table Bookings" },
   { key: "event", icon: "🎉", label: "Event Bookings" },
   { key: "order", icon: "🍽️", label: "Food Orders" },
 ];
 
-/* ─── MAIN COMPONENT ─────────────────────────────────────────────────────── */
+//MAIN COMPONENT
 function AdminBookings() {
   const [activeTab, setActiveTab] = useState("table");
   const [tableBookings, setTableBookings] = useState([]);
@@ -152,7 +152,7 @@ function AdminBookings() {
     fetchAllBookings();
   }, []);
 
-  /* ── original fetch logic (unchanged) ── */
+  //original fetch logic
   const fetchAllBookings = async () => {
     try {
       const [tableRes, eventRes, orderRes] = await Promise.all([
@@ -170,7 +170,7 @@ function AdminBookings() {
     }
   };
 
-  /* ── original updateStatus logic (unchanged) ── */
+  // original updateStatus logic
   const updateStatus = async (type, id, status) => {
     console.log(`Updating ${type} ${id} to ${status}`);
     try {
@@ -323,7 +323,7 @@ function AdminBookings() {
         </div>
       </div>
 
-      {/* ── BODY ── */}
+      {/*BODY */}
       <div
         style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 60px" }}
       >
@@ -350,7 +350,7 @@ function AdminBookings() {
           ))}
         </div>
 
-        {/* ── TABLE BOOKINGS ── */}
+        {/* TABLE BOOKINGS */}
         {activeTab === "table" && (
           <div className="table-container">
             <table className="data-table">

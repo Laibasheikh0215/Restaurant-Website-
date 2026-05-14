@@ -4,7 +4,7 @@ import axios from "axios";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
-/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
+// GLOBAL CSS IN JS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }
@@ -113,7 +113,7 @@ const GLOBAL_CSS = `
   .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 16px 0; }
 `;
 
-/* ─── STATUS HELPERS ─────────────────────────────────────────────────────── */
+//STATUS HELPERS
 const STATUS_COLORS = {
   pending: { bg: "rgba(245,158,11,0.15)", color: "#f59e0b" },
   confirmed: { bg: "rgba(59,130,246,0.15)", color: "#60a5fa" },
@@ -128,14 +128,14 @@ const statusStyle = (status) =>
     color: "rgba(255,255,255,0.5)",
   };
 
-/* ─── TABS CONFIG ─────────────────────────────────────────────────────────── */
+// TABS CONFIG
 const TABS = [
   { key: "orders", icon: "🍽️", label: "Food Orders" },
   { key: "tables", icon: "🪑", label: "Table Bookings" },
   { key: "events", icon: "🎉", label: "Event Bookings" },
 ];
 
-/* ─── COMPONENT ──────────────────────────────────────────────────────────── */
+// COMPONENT
 function MyBookingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();

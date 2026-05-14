@@ -25,16 +25,16 @@ app.use(cors());
 app.use(express.json());
 
 // Enable gzip compression for all responses
-const compression = require('compression');
+const compression = require("compression");
 app.use(compression());
 
-const { 
-    saveSubscription, 
-    sendNotification, 
-    sendNotificationToAll 
-} = require('./utils/notifications');
+const {
+  saveSubscription,
+  sendNotification,
+  sendNotificationToAll,
+} = require("./utils/notifications");
 
-// ============ FILE UPLOAD SETUP ============
+// FILE UPLOAD SETUP
 const uploadDir = "./uploads";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
@@ -108,7 +108,7 @@ const sendOrderUpdate = (userId, orderId, status, message) => {
   }
 };
 
-// ============ AUTH ROUTES ============
+// AUTH ROUTES
 
 app.post("/api/auth/register", async (req, res) => {
   try {
@@ -198,7 +198,7 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   }
 });
 
-// ============ MENU ROUTES ============
+// MENU ROUTES
 
 app.get("/api/menu", async (req, res) => {
   try {
@@ -211,7 +211,7 @@ app.get("/api/menu", async (req, res) => {
   }
 });
 
-// ============ ADMIN: MENU MANAGEMENT ============
+// ADMIN: MENU MANAGEMENT
 
 app.post(
   "/api/admin/menu",
@@ -343,7 +343,7 @@ app.patch(
   },
 );
 
-// ============ UPLOAD IMAGE ============
+// UPLOAD IMAGE
 
 app.post(
   "/api/admin/upload",
@@ -369,7 +369,7 @@ app.post(
   },
 );
 
-// ============ ORDER ROUTES ============
+// ORDER ROUTES
 
 app.post("/api/orders", authMiddleware, async (req, res) => {
   try {
@@ -570,7 +570,7 @@ app.put("/api/orders/:id/confirm", authMiddleware, async (req, res) => {
   }
 });
 
-// ============ TABLE BOOKING ROUTES ============
+// TABLE BOOKING ROUTES
 
 app.get("/api/table-bookings/available-slots", async (req, res) => {
   try {
@@ -676,7 +676,7 @@ app.get("/api/table-bookings/date/:date", async (req, res) => {
   }
 });
 
-// ============ EVENT LOCATION ROUTES ============
+// EVENT LOCATION ROUTES
 
 app.get("/api/event-locations", async (req, res) => {
   try {
@@ -816,7 +816,7 @@ app.get("/api/event-bookings/calendar", async (req, res) => {
   }
 });
 
-// ============ ADMIN: USER MANAGEMENT ============
+// ADMIN: USER MANAGEMENT
 
 app.get(
   "/api/admin/users",
@@ -879,11 +879,9 @@ app.delete(
       );
 
       if (ordersCheck.rows.length > 0) {
-        return res
-          .status(400)
-          .json({
-            error: "Cannot delete user with existing orders. Archive instead.",
-          });
+        return res.status(400).json({
+          error: "Cannot delete user with existing orders. Archive instead.",
+        });
       }
 
       const result = await pool.query(
@@ -902,7 +900,7 @@ app.delete(
   },
 );
 
-// ============ ADMIN: REPORTS & ANALYTICS ============
+// ADMIN: REPORTS & ANALYTICS
 app.get(
   "/api/admin/sales-analytics",
   authMiddleware,
@@ -1045,7 +1043,7 @@ app.get(
   },
 );
 
-// ============ EVENT GUESTS MANAGEMENT ============
+// EVENT GUESTS MANAGEMENT
 
 app.get("/api/event-bookings/:id/guests", authMiddleware, async (req, res) => {
   try {
@@ -1091,14 +1089,14 @@ app.delete("/api/event-guests/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ============ START SERVER ============
+// START SERVER
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Socket.io enabled for real-time updates`);
 });
 
-// ============ ADMIN: EVENT LOCATION MANAGEMENT ============
+// ADMIN: EVENT LOCATION MANAGEMENT
 
 // Add new event location
 app.post(
@@ -1224,7 +1222,7 @@ app.get(
   },
 );
 
-// ============ ADMIN: CHART DATA FOR DASHBOARD ============
+// ADMIN: CHART DATA FOR DASHBOARD
 app.get(
   "/api/admin/chart-data",
   authMiddleware,
@@ -1284,7 +1282,7 @@ app.get(
     }
   },
 );
-// ============ ADMIN: EXPORT DATA ============
+// ADMIN: EXPORT DATA
 app.get(
   "/api/admin/export/:type",
   authMiddleware,
@@ -1403,81 +1401,86 @@ app.get(
   },
 );
 
-// ============ SOCIAL LOGIN (Google) ============
-app.post('/api/auth/social-login', async (req, res) => {
-    try {
-        const { email, full_name, provider, provider_id } = req.body;
-        
-        // Check if user exists
-        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        
-        if (result.rows.length === 0) {
-            // Create new user
-            const randomPassword = Math.random().toString(36).slice(-8);
-            const hashedPassword = await bcrypt.hash(randomPassword, 10);
-            
-            result = await pool.query(
-                `INSERT INTO users (email, password_hash, full_name, role, phone) 
+// SOCIAL LOGIN (Google)
+app.post("/api/auth/social-login", async (req, res) => {
+  try {
+    const { email, full_name, provider, provider_id } = req.body;
+
+    // Check if user exists
+    let result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+
+    if (result.rows.length === 0) {
+      // Create new user
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      result = await pool.query(
+        `INSERT INTO users (email, password_hash, full_name, role, phone) 
                  VALUES ($1, $2, $3, $4, $5) 
                  RETURNING id, email, full_name, role`,
-                [email, hashedPassword, full_name, 'customer', '']
-            );
-        }
-        
-        const user = result.rows[0];
-        
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-        
-        res.json({ 
-            success: true, 
-            token, 
-            user: { 
-                id: user.id, 
-                email: user.email, 
-                full_name: user.full_name, 
-                role: user.role 
-            } 
-        });
-    } catch (error) {
-        console.error('Social login error:', error);
-        res.status(500).json({ error: error.message });
+        [email, hashedPassword, full_name, "customer", ""],
+      );
     }
+
+    const user = result.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Social login error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// ============ FORGOT PASSWORD ============
+// FORGOT PASSWORD
 
 // Forgot password - send reset email
-app.post('/api/auth/forgot-password', async (req, res) => {
-    try {
-        const { email } = req.body;
-        
-        console.log('Forgot password request for:', email);
-        
-        const result = await pool.query('SELECT id, email, full_name FROM users WHERE email = $1', [email]);
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found with this email' });
-        }
-        
-        const user = result.rows[0];
-        
-        // Generate reset token (valid for 1 hour)
-        const resetToken = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-        
-        // Reset link
-        const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
-        
-        // Email HTML
-        const emailHtml = `
+app.post("/api/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    console.log("Forgot password request for:", email);
+
+    const result = await pool.query(
+      "SELECT id, email, full_name FROM users WHERE email = $1",
+      [email],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found with this email" });
+    }
+
+    const user = result.rows[0];
+
+    // Generate reset token (valid for 1 hour)
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    // Reset link
+    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+
+    // Email HTML
+    const emailHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #4c1d95;">Password Reset Request</h2>
                 <p>Dear ${user.full_name},</p>
@@ -1489,98 +1492,107 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 <p style="font-size: 12px; color: #6b7280;">Restaurant Management System</p>
             </div>
         `;
-        
-        await sendConfirmationEmail(user.email, 'Password Reset Request', emailHtml);
-        
-        res.json({ success: true, message: 'Password reset email sent successfully' });
-        
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({ error: error.message });
-    }
+
+    await sendConfirmationEmail(
+      user.email,
+      "Password Reset Request",
+      emailHtml,
+    );
+
+    res.json({
+      success: true,
+      message: "Password reset email sent successfully",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Reset password with token
-app.post('/api/auth/reset-password/:token', async (req, res) => {
+app.post("/api/auth/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { new_password } = req.body;
+
+    console.log("Reset password request received");
+
+    // Verify token
+    let decoded;
     try {
-        const { token } = req.params;
-        const { new_password } = req.body;
-        
-        console.log('Reset password request received');
-        
-        // Verify token
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            return res.status(400).json({ error: 'Invalid or expired token' });
-        }
-        
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(new_password, 10);
-        
-        // Update password
-        await pool.query(
-            'UPDATE users SET password_hash = $1 WHERE id = $2',
-            [hashedPassword, decoded.id]
-        );
-        
-        res.json({ success: true, message: 'Password reset successful! Please login with new password.' });
-        
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({ error: error.message });
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ error: "Invalid or expired token" });
     }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    // Update password
+    await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+      hashedPassword,
+      decoded.id,
+    ]);
+
+    res.json({
+      success: true,
+      message: "Password reset successful! Please login with new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// ============ UPDATE PROFILE ============
-app.put('/api/auth/update-profile', authMiddleware, async (req, res) => {
-    try {
-        const { full_name, email, phone } = req.body;
-        const userId = req.user.id;
-        
-        console.log('Updating profile for user:', userId);
-        console.log('New data:', { full_name, email, phone });
-        
-        // Check if email already taken by another user
-        const emailCheck = await pool.query(
-            'SELECT id FROM users WHERE email = $1 AND id != $2',
-            [email, userId]
-        );
-        
-        if (emailCheck.rows.length > 0) {
-            return res.status(400).json({ error: 'Email already taken by another user' });
-        }
-        
-        const result = await pool.query(
-            `UPDATE users 
+// UPDATE PROFILE
+app.put("/api/auth/update-profile", authMiddleware, async (req, res) => {
+  try {
+    const { full_name, email, phone } = req.body;
+    const userId = req.user.id;
+
+    console.log("Updating profile for user:", userId);
+    console.log("New data:", { full_name, email, phone });
+
+    // Check if email already taken by another user
+    const emailCheck = await pool.query(
+      "SELECT id FROM users WHERE email = $1 AND id != $2",
+      [email, userId],
+    );
+
+    if (emailCheck.rows.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "Email already taken by another user" });
+    }
+
+    const result = await pool.query(
+      `UPDATE users 
              SET full_name = $1, email = $2, phone = $3, updated_at = CURRENT_TIMESTAMP
              WHERE id = $4
              RETURNING id, email, full_name, phone, role, created_at`,
-            [full_name, email, phone, userId]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        res.json({ success: true, user: result.rows[0] });
-        
-    } catch (error) {
-        console.error('Profile update error:', error);
-        res.status(500).json({ error: error.message });
+      [full_name, email, phone, userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    res.json({ success: true, user: result.rows[0] });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Orders with pagination
-app.get('/api/orders/my-orders', authMiddleware, async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
-        
-        const result = await pool.query(
-            `SELECT o.*, 
+app.get("/api/orders/my-orders", authMiddleware, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const result = await pool.query(
+      `SELECT o.*, 
              COALESCE(json_agg(json_build_object('name', mi.name, 'quantity', oi.quantity, 'price', oi.price)) FILTER (WHERE mi.id IS NOT NULL), '[]') as items 
              FROM orders o 
              LEFT JOIN order_items oi ON o.id = oi.order_id 
@@ -1589,91 +1601,94 @@ app.get('/api/orders/my-orders', authMiddleware, async (req, res) => {
              GROUP BY o.id 
              ORDER BY o.created_at DESC
              LIMIT $2 OFFSET $3`,
-            [req.user.id, limit, offset]
-        );
-        
-        const countResult = await pool.query('SELECT COUNT(*) FROM orders WHERE user_id = $1', [req.user.id]);
-        
-        res.json({
-            data: result.rows,
-            total: parseInt(countResult.rows[0].count),
-            page: page,
-            totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+      [req.user.id, limit, offset],
+    );
+
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM orders WHERE user_id = $1",
+      [req.user.id],
+    );
+
+    res.json({
+      data: result.rows,
+      total: parseInt(countResult.rows[0].count),
+      page: page,
+      totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Cache middleware
 const cacheControl = (duration) => {
-    return (req, res, next) => {
-        res.set('Cache-Control', `public, max-age=${duration}`);
-        next();
-    };
+  return (req, res, next) => {
+    res.set("Cache-Control", `public, max-age=${duration}`);
+    next();
+  };
 };
 
 // Use on GET endpoints
-app.get('/api/menu', cacheControl(3600), async (req, res) => {
-    // ... code
-});
+app.get("/api/menu", cacheControl(3600), async (req, res) => {});
 
 // Save push subscription
-app.post('/api/notifications/subscribe', authMiddleware, async (req, res) => {
-    try {
-        const subscription = req.body;
-        saveSubscription(req.user.id, subscription);
-        res.json({ success: true, message: 'Subscribed to notifications' });
-    } catch (error) {
-        console.error('Subscription error:', error);
-        res.status(500).json({ error: error.message });
-    }
+app.post("/api/notifications/subscribe", authMiddleware, async (req, res) => {
+  try {
+    const subscription = req.body;
+    saveSubscription(req.user.id, subscription);
+    res.json({ success: true, message: "Subscribed to notifications" });
+  } catch (error) {
+    console.error("Subscription error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Unsubscribe
-app.post('/api/notifications/unsubscribe', authMiddleware, async (req, res) => {
-    try {
-        // Remove subscription logic here
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+app.post("/api/notifications/unsubscribe", authMiddleware, async (req, res) => {
+  try {
+    // Remove subscription logic here
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Test notification
-app.post('/api/notifications/test', authMiddleware, async (req, res) => {
-    try {
-        await sendNotification(req.user.id, 'Test Notification', 'This is a test notification!');
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+app.post("/api/notifications/test", authMiddleware, async (req, res) => {
+  try {
+    await sendNotification(
+      req.user.id,
+      "Test Notification",
+      "This is a test notification!",
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
-
-// Update order status with notification
 
 // Booking reminder (cron job)
 const scheduleReminders = async () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
-    // Get tomorrow's bookings
-    const bookings = await pool.query(
-        `SELECT tb.*, u.id as user_id, u.full_name 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+  // Get tomorrow's bookings
+  const bookings = await pool.query(
+    `SELECT tb.*, u.id as user_id, u.full_name 
          FROM table_bookings tb 
          JOIN users u ON tb.user_id = u.id 
          WHERE tb.booking_date = $1 AND tb.status = 'confirmed'`,
-        [tomorrowStr]
+    [tomorrowStr],
+  );
+
+  for (const booking of bookings.rows) {
+    await sendNotification(
+      booking.user_id,
+      "Table Booking Reminder",
+      `You have a table booking tomorrow at ${booking.booking_time} for ${booking.party_size} guests`,
     );
-    
-    for (const booking of bookings.rows) {
-        await sendNotification(
-            booking.user_id,
-            'Table Booking Reminder',
-            `You have a table booking tomorrow at ${booking.booking_time} for ${booking.party_size} guests`
-        );
-    }
+  }
 };
 
 // Run reminders every hour

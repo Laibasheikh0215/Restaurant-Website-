@@ -5,9 +5,7 @@ import { useCart } from "../../contexts/CartContext";
 import toast from "react-hot-toast";
 import TableLayout from "../../components/TableLayout";
 
-/* ─────────────────────────────────────────────
-   GLOBAL CSS
-───────────────────────────────────────────────*/
+// GLOBAL CSS IN JS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

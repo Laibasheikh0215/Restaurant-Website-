@@ -6,7 +6,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
+// GLOBAL CSS IN JS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }
@@ -87,7 +87,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-/* ─── CHART OPTIONS ───────────────────────────────────────────────────────── */
+// CHART OPTIONS
 const makeChartOptions = () => ({
   responsive: true,
   maintainAspectRatio: true,
@@ -122,7 +122,7 @@ const makeChartOptions = () => ({
   },
 });
 
-/* ─── STAT CARD COMPONENT ────────────────────────────────────────────────── */
+// STAT CARD COMPONENT
 function StatCard({ icon, title, value, accentColor, delay }) {
   return (
     <div className="stat-card" style={{ animationDelay: delay }}>
@@ -187,7 +187,7 @@ function StatCard({ icon, title, value, accentColor, delay }) {
   );
 }
 
-/* ─── CHART CARD COMPONENT ───────────────────────────────────────────────── */
+//CHART CARD COMPONENT
 function ChartCard({
   icon,
   title,

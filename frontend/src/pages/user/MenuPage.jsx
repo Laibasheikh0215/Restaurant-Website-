@@ -4,9 +4,7 @@ import axios from "axios";
 import { useCart } from "../../contexts/CartContext";
 import { useAuth } from "../../contexts/AuthContext";
 
-/* ─────────────────────────────────────────────
-   GLOBAL CSS
-───────────────────────────────────────────────*/
+// GLOBAL CSS IN JS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -464,47 +462,144 @@ function MenuPage() {
       }}
     >
       {/* ── NAV ── */}
-      <nav style={{
-  position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '18px 60px',
-  background: 'rgba(10,10,10,0.88)', backdropFilter: 'blur(14px)',
-  borderBottom: '1px solid rgba(255,255,255,0.06)',
-}}>
-  <a href="/" style={{ fontSize: '22px', fontFamily: "'Playfair Display', serif", fontWeight: '700', letterSpacing: '2px', color: '#fff', textDecoration: 'none' }}>
-    <span style={{ color: '#E8441A' }}>美食家大廳</span> Epicure <span style={{ color: '#E8441A' }}>Hall</span>
-  </a>
-
-  <ul style={{ display: 'flex', gap: '32px', listStyle: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: '500', margin: 0, padding: 0 }}>
-    {[
-      { name: "Home", path: "/" },
-      { name: "Menu", path: "/menu" },
-      { name: "Book Tables", path: "/table-booking" },
-      { name: "My Bookings", path: "/my-bookings" },
-    ].map((link) => (
-      <li key={link.name}>
-        <a href={link.path} style={{ color: link.path === window.location.pathname ? '#fff' : 'rgba(255,255,255,0.7)', textDecoration: 'none', transition: 'color 0.2s' }}>
-          {link.name}
+      <nav
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "18px 60px",
+          background: "rgba(10,10,10,0.88)",
+          backdropFilter: "blur(14px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <a
+          href="/"
+          style={{
+            fontSize: "22px",
+            fontFamily: "'Playfair Display', serif",
+            fontWeight: "700",
+            letterSpacing: "2px",
+            color: "#fff",
+            textDecoration: "none",
+          }}
+        >
+          <span style={{ color: "#E8441A" }}>美食家大廳</span> Epicure{" "}
+          <span style={{ color: "#E8441A" }}>Hall</span>
         </a>
-      </li>
-    ))}
-  </ul>
 
-  {user ? (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-      <Link to="/cart" style={{ fontSize: '20px', textDecoration: 'none', color: 'rgba(255,255,255,0.8)', position: 'relative' }}>
-        🛒
-        {cartCount > 0 && <span style={{ position: 'absolute', top: '-6px', right: '-8px', background: '#E8441A', color: '#fff', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700' }}>{cartCount}</span>}
-      </Link>
-      <ProfileDropdown user={user} onLogout={handleLogout} />
-    </div>
-  ) : (
-    <div>
-      <Link to="/login" style={{ background: '#E8441A', color: '#fff', padding: '10px 24px', borderRadius: '50px', textDecoration: 'none', fontSize: '14px', fontWeight: '600', marginLeft: '12px' }}>Sign In</Link>
-      <Link to="/register" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '10px 24px', borderRadius: '50px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Sign Up</Link>
-    </div>
-  )}
-</nav>
+        <ul
+          style={{
+            display: "flex",
+            gap: "32px",
+            listStyle: "none",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            margin: 0,
+            padding: 0,
+          }}
+        >
+          {[
+            { name: "Home", path: "/" },
+            { name: "Menu", path: "/menu" },
+            { name: "Book Tables", path: "/table-booking" },
+            { name: "My Bookings", path: "/my-bookings" },
+          ].map((link) => (
+            <li key={link.name}>
+              <a
+                href={link.path}
+                style={{
+                  color:
+                    link.path === window.location.pathname
+                      ? "#fff"
+                      : "rgba(255,255,255,0.7)",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+              >
+                {link.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <Link
+              to="/cart"
+              style={{
+                fontSize: "20px",
+                textDecoration: "none",
+                color: "rgba(255,255,255,0.8)",
+                position: "relative",
+              }}
+            >
+              🛒
+              {cartCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-6px",
+                    right: "-8px",
+                    background: "#E8441A",
+                    color: "#fff",
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                  }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <ProfileDropdown user={user} onLogout={handleLogout} />
+          </div>
+        ) : (
+          <div>
+            <Link
+              to="/login"
+              style={{
+                background: "#E8441A",
+                color: "#fff",
+                padding: "10px 24px",
+                borderRadius: "50px",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600",
+                marginLeft: "12px",
+              }}
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/register"
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.3)",
+                color: "#fff",
+                padding: "10px 24px",
+                borderRadius: "50px",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600",
+              }}
+            >
+              Sign Up
+            </Link>
+          </div>
+        )}
+      </nav>
 
       {/* ── PAGE HEADER ── */}
       <div

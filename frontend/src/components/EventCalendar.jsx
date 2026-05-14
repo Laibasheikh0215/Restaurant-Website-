@@ -40,7 +40,7 @@ function EventCalendar({ onDateSelect }) {
         }
     };
 
-    // ✅ HANDLE DATE CLICK FUNCTION
+    // HANDLE DATE CLICK FUNCTION
     const handleDateClick = (date) => {
         const dateStr = date.toISOString().split('T')[0];
         if (onDateSelect) {

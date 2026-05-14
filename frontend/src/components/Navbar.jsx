@@ -4,9 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import ProfileDropdown from "./ProfileDropdown";
 
-/* ─────────────────────────────────────────────
-   GLOBAL CSS
-───────────────────────────────────────────────*/
+//*GLOBAL CSS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }

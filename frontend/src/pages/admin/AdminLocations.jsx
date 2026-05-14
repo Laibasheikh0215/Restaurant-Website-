@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
+// GLOBAL CSS IN JS
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }
@@ -259,7 +259,7 @@ const CATEGORIES = [
   "Beverages",
 ];
 
-/* ─── TOGGLE COMPONENT ───────────────────────────────────────────────────── */
+// TOGGLE COMPONENT
 function Toggle({ checked, onChange, label }) {
   return (
     <label className="toggle-checkbox">
@@ -281,7 +281,7 @@ function Toggle({ checked, onChange, label }) {
   );
 }
 
-/* ─── MAIN COMPONENT ─────────────────────────────────────────────────────── */
+// MAIN COMPONENT
 function AdminMenu() {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);

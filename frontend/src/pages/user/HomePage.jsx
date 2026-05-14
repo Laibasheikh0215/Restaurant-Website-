@@ -737,7 +737,8 @@ const MENU_ITEMS = [
 function HomePage() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
-const { getCount } = useCart();  
+const { getCount } = useCart(); 
+  const cartCount = getCount();
 
   // Inject global CSS once
   useEffect(() => {

@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
-/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
+// GLOBAL CSS 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; }
@@ -97,7 +97,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-/* ─── STEP CONFIG ─────────────────────────────────────────────────────────── */
+// STEP CONFIG
 const STEPS = [
   { key: "pending", icon: "📝", label: "Placed" },
   { key: "confirmed", icon: "✅", label: "Confirmed" },
@@ -116,7 +116,7 @@ const STATUS_COLORS = {
   cancelled: { bg: "rgba(239,68,68,0.12)", color: "#f87171" },
 };
 
-/* ─── COMPONENT ──────────────────────────────────────────────────────────── */
+// COMPONENT
 function OrderTrackingPage() {
   const { orderId } = useParams();
   const { user } = useAuth();
