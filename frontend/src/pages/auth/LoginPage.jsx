@@ -120,27 +120,37 @@ function LoginPage() {
   }, []);
 
   /* ── original submit logic (unchanged) ── */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-      console.log('Login response:', response.data);
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        toast.success('Login successful!');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  
+  try {
+    const response = await axios.post('http://localhost:5000/api/auth/login', { 
+      email, 
+      password 
+    });
+    
+    console.log('Login response:', response.data);
+    
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token);
+      toast.success('Login successful!');
+      
+      // ✅ SIRF YE LINE CHANGE KARO - UI nahi badlega
+      setTimeout(() => {
         if (response.data.user.role === 'admin') {
           window.location.href = '/admin';
         } else {
           window.location.href = '/';
         }
-      }
-    } catch (error) {
-      console.error('Login error:', error.response?.data);
-      toast.error(error.response?.data?.error || 'Login failed');
-      setLoading(false);
+      }, 500);
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error.response?.data);
+    toast.error(error.response?.data?.error || 'Login failed');
+    setLoading(false);
+  }
+};
 
   /* ── original Google logic (unchanged) ── */
   const handleGoogleLogin = async () => {

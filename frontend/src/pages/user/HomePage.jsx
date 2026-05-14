@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCart } from '../../contexts/CartContext';
+import ProfileDropdown from "../../components/ProfileDropdown";
 
 // SCROLL ANIMATION HOOK
 function useReveal(threshold = 0.15) {
@@ -104,19 +106,19 @@ const S = {
 
   /* NAV */
   nav: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "18px 60px",
-    background: "rgba(10,10,10,0.85)",
-    backdropFilter: "blur(12px)",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-  },
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1000,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "18px 60px",
+  background: "#0a0a0a",
+  backdropFilter: "blur(0px)",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+},
   navLogo: {
     fontSize: "26px",
     fontWeight: "700",
@@ -731,115 +733,11 @@ const MENU_ITEMS = [
   },
 ];
 
-// ─── PROFILE DROPDOWN COMPONENT ───────────────────────────────────────────────
-function ProfileDropdown({ user, onLogout }) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef(null);
-
-  // Close when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : (user?.email?.[0]?.toUpperCase() ?? "U");
-
-  const displayName = user?.name || "My Account";
-  const displayEmail = user?.email || "";
-
-  return (
-    <div ref={wrapperRef} style={S.navAvatarWrapper}>
-      {/* Avatar button — click to toggle dropdown */}
-      <div
-        className="nav-avatar"
-        style={S.navAvatar}
-        onClick={() => setOpen((prev) => !prev)}
-        title="My Profile"
-      >
-        {initials}
-      </div>
-
-      {/* Dropdown panel */}
-      {open && (
-        <div className="dropdown-menu" style={S.dropdown}>
-          {/* Little arrow */}
-          <div style={S.dropdownArrow} />
-
-          {/* User info header */}
-          <div style={S.dropdownHeader}>
-            <div style={S.dropdownName}>{displayName}</div>
-            {displayEmail && <div style={S.dropdownEmail}>{displayEmail}</div>}
-          </div>
-
-          {/* Menu items */}
-          <Link
-            to="/profile"
-            className="dropdown-item"
-            style={S.dropdownItem}
-            onClick={() => setOpen(false)}
-          >
-            👤 &nbsp; My Profile
-          </Link>
-          <Link
-            to="/orders"
-            className="dropdown-item"
-            style={S.dropdownItem}
-            onClick={() => setOpen(false)}
-          >
-            🧾 &nbsp; My Orders
-          </Link>
-          <Link
-            to="/table-booking"
-            className="dropdown-item"
-            style={S.dropdownItem}
-            onClick={() => setOpen(false)}
-          >
-            📅 &nbsp; My Reservations
-          </Link>
-          <Link
-            to="/settings"
-            className="dropdown-item"
-            style={S.dropdownItem}
-            onClick={() => setOpen(false)}
-          >
-            ⚙️ &nbsp; Settings
-          </Link>
-
-          <div style={S.dropdownDivider} />
-
-          {/* Logout */}
-          <button
-            className="dropdown-logout"
-            style={S.dropdownLogout}
-            onClick={() => {
-              setOpen(false);
-              onLogout();
-            }}
-          >
-            🚪 &nbsp; Logout
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
 function HomePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+const { getCount } = useCart();  
 
   // Inject global CSS once
   useEffect(() => {
@@ -868,48 +766,48 @@ function HomePage() {
       {/* ════════════════════════════════════════
           NAV
       ════════════════════════════════════════ */}
-      <nav style={S.nav} className="nav-bar">
-        <a href="/" style={S.navLogo}>
-          <span style={S.navLogoAccent}>美食家大廳</span> Epicure{" "}
-          <span style={S.navLogoAccent}>Hall</span>
+<nav style={{
+  position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  padding: '18px 60px',
+  background: 'rgba(10,10,10,0.88)', backdropFilter: 'blur(14px)',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+}}>
+  <a href="/" style={{ fontSize: '22px', fontFamily: "'Playfair Display', serif", fontWeight: '700', letterSpacing: '2px', color: '#fff', textDecoration: 'none' }}>
+    <span style={{ color: '#E8441A' }}>美食家大廳</span> Epicure <span style={{ color: '#E8441A' }}>Hall</span>
+  </a>
+
+  <ul style={{ display: 'flex', gap: '32px', listStyle: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: '500', margin: 0, padding: 0 }}>
+    {[
+      { name: "Home", path: "/" },
+      { name: "Menu", path: "/menu" },
+      { name: "Book Tables", path: "/table-booking" },
+      { name: "Events", path: "/event-booking" },
+      { name: "My Bookings", path: "/my-bookings" },
+    ].map((link) => (
+      <li key={link.name}>
+        <a href={link.path} style={{ color: link.path === window.location.pathname ? '#fff' : 'rgba(255,255,255,0.7)', textDecoration: 'none', transition: 'color 0.2s' }}>
+          {link.name}
         </a>
+      </li>
+    ))}
+  </ul>
 
-        <ul style={S.navLinks}>
-          {["Home", "Menu", "Reservations", "Events", "Contact"].map((l) => (
-            <li key={l}>
-              <a href="#" className="nav-link" style={S.navLink}>
-                {l}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        {/* ── RIGHT SIDE: changes based on auth state ── */}
-        {user ? (
-          // ✅ LOGGED IN → Cart icon + Profile dropdown
-          <div style={S.navRight}>
-            <Link
-              to="/cart"
-              className="nav-cart"
-              style={S.navCart}
-              title="My Cart"
-            >
-              🛒
-            </Link>
-            <ProfileDropdown user={user} onLogout={handleLogout} />
-          </div>
-        ) : (
-          // ❌ LOGGED OUT → Sign In + Sign Up
-          <div>
-            <Link to="/login" style={S.navCta}>
-              Sign In
-            </Link>
-            <Link to="/register" style={S.navCtaOutline}>
-              Sign Up
-            </Link>
-          </div>
-        )}
-      </nav>
+  {user ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <Link to="/cart" style={{ fontSize: '20px', textDecoration: 'none', color: 'rgba(255,255,255,0.8)', position: 'relative' }}>
+        🛒
+        {cartCount > 0 && <span style={{ position: 'absolute', top: '-6px', right: '-8px', background: '#E8441A', color: '#fff', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700' }}>{cartCount}</span>}
+      </Link>
+      <ProfileDropdown user={user} onLogout={handleLogout} />
+    </div>
+  ) : (
+    <div>
+      <Link to="/login" style={{ background: '#E8441A', color: '#fff', padding: '10px 24px', borderRadius: '50px', textDecoration: 'none', fontSize: '14px', fontWeight: '600', marginLeft: '12px' }}>Sign In</Link>
+      <Link to="/register" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '10px 24px', borderRadius: '50px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Sign Up</Link>
+    </div>
+  )}
+</nav>
 
       {/* ════════════════════════════════════════
           HERO
