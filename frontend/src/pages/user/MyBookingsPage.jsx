@@ -164,41 +164,54 @@ function MyBookingsPage() {
   }, []);
 
   /* ── original fetch logic (unchanged) ── */
-  const fetchAllData = async () => {
+const fetchAllData = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      setLoading(false);
-      return;
+        setLoading(false);
+        return;
     }
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      };
-      const ordersResponse = await axios.get(
-        "http://localhost:5000/api/orders/my-orders",
-        config,
-      );
-      setOrders(ordersResponse.data || []);
-      const tableResponse = await axios.get(
-        "http://localhost:5000/api/table-bookings/my-bookings",
-        config,
-      );
-      setTableBookings(tableResponse.data || []);
-      const eventResponse = await axios.get(
-        "http://localhost:5000/api/event-bookings/my-bookings",
-        config,
-      );
-      setEventBookings(eventResponse.data || []);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        };
+        
+        // ✅ FIX: orders API response mein .data property hai
+        const ordersResponse = await axios.get(
+            "http://localhost:5000/api/orders/my-orders",
+            config,
+        );
+        
+        // Check if response has data property
+        if (ordersResponse.data && Array.isArray(ordersResponse.data)) {
+            setOrders(ordersResponse.data);
+        } else if (ordersResponse.data && ordersResponse.data.data && Array.isArray(ordersResponse.data.data)) {
+            setOrders(ordersResponse.data.data);
+        } else {
+            setOrders([]);
+        }
+        
+        const tableResponse = await axios.get(
+            "http://localhost:5000/api/table-bookings/my-bookings",
+            config,
+        );
+        setTableBookings(tableResponse.data || []);
+        
+        const eventResponse = await axios.get(
+            "http://localhost:5000/api/event-bookings/my-bookings",
+            config,
+        );
+        setEventBookings(eventResponse.data || []);
+        
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to load bookings");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load bookings");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   /* ── counts per tab ── */
   const counts = {

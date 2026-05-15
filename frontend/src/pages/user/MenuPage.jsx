@@ -872,27 +872,43 @@ function MenuPage() {
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               {/* Image */}
-              <div
-                style={{
-                  height: "200px",
-                  background:
-                    "linear-gradient(135deg, #1e0e06 0%, #2d1508 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "60px",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                🍕
-                {searchTerm &&
-                  item.name
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase()) && (
-                    <span className="match-badge">Match</span>
-                  )}
-              </div>
+            <div
+  style={{
+    height: "200px",
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: "20px 20px 0 0",
+  }}
+>
+  {item.image_url ? (
+    <img
+      src={`http://localhost:5000${item.image_url}`}
+      alt={item.name}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
+  ) : (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        background: "linear-gradient(135deg, #1e0e06 0%, #2d1508 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "60px",
+      }}
+    >
+      🍕
+    </div>
+  )}
+  {searchTerm && item.name.toLowerCase().includes(searchTerm.toLowerCase()) && (
+    <span className="match-badge">Match</span>
+  )}
+</div>
 
               {/* Body */}
               <div style={{ padding: "22px 24px 24px" }}>

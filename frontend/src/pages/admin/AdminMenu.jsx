@@ -315,57 +315,98 @@ function AdminMenu() {
   }, []);
 
   /* ── original logic (all unchanged) ── */
-  const fetchMenu = async () => {
+ const fetchMenu = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/menu");
-      setMenuItems(response.data);
+        const response = await axios.get("http://localhost:5000/api/menu");
+        console.log("Full response:", response);
+        console.log("Response data:", response.data);
+        
+        // ✅ Force set menuItems
+        if (response.data && Array.isArray(response.data)) {
+            setMenuItems(response.data);
+        } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+            setMenuItems(response.data.data);
+        } else {
+            // Agar kuch aur structure hai to
+            setMenuItems([]);
+        }
+        
+        // Debug: Check state after set
+        setTimeout(() => {
+            console.log("menuItems state after fetch:", menuItems);
+        }, 500);
+        
     } catch (error) {
-      console.error("Error fetching menu:", error);
-      toast.error("Failed to load menu");
+        console.error("Error fetching menu:", error);
+        toast.error("Failed to load menu");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
-  const handleImageUpload = async (e) => {
+ const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const data = new FormData();
-    data.append("image", file);
+    
+    if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+    }
+    
+    const imgFormData = new FormData();  // ✅ Renamed to avoid conflict with state variable
+    imgFormData.append('image', file);
+    
     setUploading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/admin/upload",
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-      if (response.data.success) {
-        setFormData((prev) => ({
-          ...prev,
-          image_url: response.data.image_url,
-        }));
-        toast.success("Image uploaded successfully");
-      }
+        const response = await axios.post('http://localhost:5000/api/admin/upload', imgFormData, {
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
+        if (response.data.success) {
+            setFormData({ ...formData, image_url: response.data.image_url });
+            toast.success('Image uploaded successfully');
+        }
     } catch (error) {
-      toast.error("Failed to upload image");
+        console.error('Upload error:', error);
+        toast.error(error.response?.data?.error || 'Failed to upload image');
     } finally {
-      setUploading(false);
+        setUploading(false);
     }
-  };
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Use formData instead of individual variables
+    const submitData = {
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      category: formData.category,
+      image_url: formData.image_url,
+      is_available: formData.is_available,
+    };
+
+    // Validate
+    if (!submitData.name || !submitData.price) {
+      toast.error("Name and price are required");
+      return;
+    }
+
     setLoading(true);
     try {
       if (editingItem) {
         await axios.put(
           `http://localhost:5000/api/admin/menu/${editingItem.id}`,
-          formData,
+          submitData,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -374,14 +415,26 @@ function AdminMenu() {
         );
         toast.success("Menu item updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/admin/menu", formData, {
+        await axios.post("http://localhost:5000/api/admin/menu", submitData, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         toast.success("Menu item added successfully!");
       }
-      resetForm();
-      fetchMenu();
+
+      setShowForm(false);
+      setEditingItem(null);
+      // Reset form using setFormData
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+        image_url: "",
+        is_available: true,
+      });
+      fetchMenu(); // Refresh the list
     } catch (error) {
+      console.error("Save error:", error);
       toast.error(error.response?.data?.error || "Failed to save menu item");
     } finally {
       setLoading(false);
