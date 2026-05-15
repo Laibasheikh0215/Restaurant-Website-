@@ -27,211 +27,83 @@ A full-featured restaurant management system with table booking, food ordering, 
 
 ## 🛠️ Tech Stack
 
-**Frontend:**
-- React.js (v18)
-- React Router DOM (v6)
-- Axios - API calls
-- Socket.io Client - Real-time updates
-- Chart.js - Analytics charts
-- React Hot Toast - Notifications
-- i18next - Multi-language support
-- Firebase - Google/Facebook authentication
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| React.js (v18) | Frontend framework |
+| React Router DOM (v6) | Routing |
+| Axios | API calls |
+| Socket.io Client | Real-time updates |
+| Chart.js | Analytics charts |
+| React Hot Toast | Notifications |
+| i18next | Multi-language support |
+| Firebase | Google/Facebook authentication |
+| Lodash | Debounce utility |
+| React Calendar | Calendar component |
+| React Chartjs 2 | Charts |
 
-**Backend:**
-- Node.js (v18+)
-- Express.js
-- PostgreSQL - Database
-- Socket.io - Real-time communication
-- JWT - Authentication
-- bcrypt - Password hashing
-- Nodemailer - Email service
-- Multer - File upload
-- Web-push - Push notifications
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Node.js (v18+) | Runtime environment |
+| Express.js | Backend framework |
+| PostgreSQL | Database |
+| Socket.io | Real-time communication |
+| JWT | Authentication |
+| bcrypt | Password hashing |
+| Nodemailer | Email service |
+| Multer | File upload |
+| Web-push | Push notifications |
+| Compression | Response compression |
+| Dotenv | Environment variables |
+| CORS | Cross-origin requests |
 
-## 📦 Installation
+## 📦 Dependencies List
 
-### Prerequisites
-- Node.js (v18 or higher)
-- PostgreSQL (v14 or higher)
-- npm or yarn
+### Backend Dependencies (`backend/package.json`)
 
-### Step 1: Clone the repository
-```bash
-git clone https://github.com/Laibasheikh0215/epicure-hall.git
-cd epicure-hall
+```json
+{
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "pg": "^8.11.3",
+    "socket.io": "^4.6.1",
+    "web-push": "^3.6.7"
+  }
+}
 
-STEP 02: SETUP DATABASE
-# Create PostgreSQL database
-psql -U postgres
-CREATE DATABASE restaurant_db;
-\q
+### Frontend Dependencies (`Frontend/package.json`)
 
-# Run schema
-psql -U postgres -d restaurant_db -f database/schema.sql
+```json
 
-STEP 03: Setup Backend
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your credentials
-npm start
-
-Step 4: Setup Frontend
-cd frontend
-npm install
-cp .env.example .env
-# Edit .env with your API URL
-npm start
-
-Step 5: Create Admin User
-cd backend
-node create-admin.js
-
-🔧 Environment Variables
-Backend (.env)
-DB_USER=postgres
-DB_HOST=localhost
-DB_NAME=restaurant_db
-DB_PASSWORD=your_password
-DB_PORT=5432
-JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-PORT=5000
-VAPID_PUBLIC_KEY=your_vapid_public_key
-VAPID_PRIVATE_KEY=your_vapid_private_key
-
-Frontend (.env)
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_key
-
-🚀 Running the Application
-Development Mode
-# Terminal 1 - Backend
-cd backend
-npm start
-
-# Terminal 2 - Frontend
-cd frontend
-npm start
-
-📁 Project Structure
-epicure-hall/
-├── backend/
-│   ├── config/
-│   ├── middleware/
-│   ├── utils/
-│   ├── uploads/
-│   └── server.js
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── contexts/
-│   │   ├── pages/
-│   │   │   ├── admin/
-│   │   │   ├── auth/
-│   │   │   └── user/
-│   │   └── services/
-│   └── package.json
-└── database/
-    └── schema.sql
-
-🔑 Default Admin Credentials
-Field	Value
-Email	admin@restaurant.com
-Password	admin123
-
-📧 Email Configuration (Gmail)
-Enable 2-factor authentication on your Gmail account
-
-Generate App Password from Google Account settings
-
-Use that App Password in EMAIL_PASS variable
-
-🔔 Push Notifications Setup
-Generate VAPID keys:
-
-bash
-cd backend
-npm install web-push
-node -e "console.log(require('web-push').generateVAPIDKeys())"
-Copy the generated keys to your .env file.
-
-🎯 API Endpoints
-Auth Routes
-Method	Endpoint	Description
-POST	/api/auth/register	User registration
-POST	/api/auth/login	User login
-GET	/api/auth/me	Get current user
-PUT	/api/auth/update-profile	Update profile
-POST	/api/auth/change-password	Change password
-POST	/api/auth/forgot-password	Forgot password
-Menu Routes
-Method	Endpoint	Description
-GET	/api/menu	Get all menu items
-POST	/api/admin/menu	Add menu item (admin)
-PUT	/api/admin/menu/:id	Update menu item (admin)
-DELETE	/api/admin/menu/:id	Delete menu item (admin)
-Order Routes
-Method	Endpoint	Description
-POST	/api/orders	Place order
-GET	/api/orders/my-orders	Get user orders
-GET	/api/orders/track/:orderId	Track order
-PUT	/api/admin/orders/:id/status	Update order status (admin)
-Table Booking Routes
-Method	Endpoint	Description
-GET	/api/table-bookings/available-slots	Get available slots
-POST	/api/table-bookings	Create booking
-GET	/api/table-bookings/my-bookings	Get user bookings
-Event Booking Routes
-Method	Endpoint	Description
-GET	/api/event-locations	Get event locations
-POST	/api/event-bookings	Create event booking
-GET	/api/event-bookings/my-bookings	Get user event bookings
-🤝 Contributing
-Fork the repository
-
-Create your feature branch (git checkout -b feature/AmazingFeature)
-
-Commit your changes (git commit -m 'Add some AmazingFeature')
-
-Push to the branch (git push origin feature/AmazingFeature)
-
-Open a Pull Request
-
-📄 License
-This project is licensed under the MIT License.
-
-👨‍💻 Developer
-Laiba Sheikh
-
-GitHub: @Laibasheikh0215
-
-🙏 Acknowledgments
-Unsplash for images
-
-React community
-
-All contributors
-
-📞 Support
-For support, email info@epicurehall.com or create an issue on GitHub.
-
-✅ Features Status
-Feature	Status
-User Authentication	✅ Complete
-Social Login (Google/FB)	✅ Complete
-Menu Management	✅ Complete
-Cart & Orders	✅ Complete
-Table Booking	✅ Complete
-Event Booking	✅ Complete
-Admin Dashboard	✅ Complete
-Real-time Tracking	✅ Complete
-Push Notifications	✅ Complete
-Multi-language	✅ Complete
-Voice Search	✅ Complete
-Email Notifications	✅ Complete
-Reports Export	✅ Complete
-Image Upload	✅ Complete
-
+{
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.14.18",
+    "axios": "^1.6.2",
+    "chart.js": "^4.4.1",
+    "firebase": "^10.7.0",
+    "i18next": "^23.7.6",
+    "i18next-browser-languagedetector": "^7.2.0",
+    "lodash": "^4.17.21",
+    "react": "^18.2.0",
+    "react-calendar": "^4.8.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-i18next": "^13.5.0",
+    "react-router-dom": "^6.20.1",
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.6.1",
+    "web-vitals": "^2.1.4"
+  }
+}
