@@ -315,27 +315,11 @@ function AdminMenu() {
   }, []);
 
   /* ── original logic (all unchanged) ── */
- const fetchMenu = async () => {
+const fetchMenu = async () => {
     try {
-        const response = await axios.get("http://localhost:5000/api/menu");
-        console.log("Full response:", response);
-        console.log("Response data:", response.data);
-        
-        // ✅ Force set menuItems
-        if (response.data && Array.isArray(response.data)) {
-            setMenuItems(response.data);
-        } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-            setMenuItems(response.data.data);
-        } else {
-            // Agar kuch aur structure hai to
-            setMenuItems([]);
-        }
-        
-        // Debug: Check state after set
-        setTimeout(() => {
-            console.log("menuItems state after fetch:", menuItems);
-        }, 500);
-        
+        const timestamp = new Date().getTime();
+        const response = await axios.get(`http://localhost:5000/api/menu?_=${timestamp}`);
+        setMenuItems(response.data);
     } catch (error) {
         console.error("Error fetching menu:", error);
         toast.error("Failed to load menu");

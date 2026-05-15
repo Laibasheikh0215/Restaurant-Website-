@@ -342,16 +342,18 @@ function MenuPage() {
 
   const fetchMenu = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/menu");
-      setMenuItems(response.data);
-      const cats = [...new Set(response.data.map((item) => item.category))];
-      setCategories(cats);
+        // Add timestamp to bypass cache
+        const response = await axios.get(`http://localhost:5000/api/menu?t=${Date.now()}`);
+        console.log("Menu fetched:", response.data.length, "items");
+        setMenuItems(response.data);
+        const cats = [...new Set(response.data.map((item) => item.category))];
+        setCategories(cats);
     } catch (error) {
-      console.error("Error fetching menu:", error);
+        console.error("Error fetching menu:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const filterItems = () => {
     let filtered = [...menuItems];

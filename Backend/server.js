@@ -391,15 +391,19 @@ app.post("/api/auth/social-login", async (req, res) => {
 });
 
 // MENU ROUTES 
-app.get("/api/menu", cacheControl(3600), async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM menu_items WHERE is_available = true ORDER BY id",
-    );
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+app.get("/api/menu", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM menu_items WHERE is_available = true ORDER BY id"
+        );
+        // Add no-cache headers
+        res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.header('Pragma', 'no-cache');
+        res.header('Expires', '0');
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ADMIN: MENU MANAGEMENT 
@@ -1310,4 +1314,12 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Socket.io enabled for real-time updates`);
+});
+
+// Disable cache for all API routes in development
+app.use('/api', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    next();
 });
