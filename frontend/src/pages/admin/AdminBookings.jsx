@@ -509,6 +509,7 @@ function AdminBookings() {
                 <tr>
                   <th>Order ID</th>
                   <th>Customer</th>
+                  <th>Items</th>
                   <th>Total</th>
                   <th>Date</th>
                   <th>Status</th>
@@ -526,13 +527,69 @@ function AdminBookings() {
                       <td style={{ color: "#fff", fontWeight: "600" }}>
                         {order.full_name}
                       </td>
+                      <td>
+                        {order.items && order.items.length > 0 ? (
+                          order.items.map((item, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: "10px",
+                                padding: "4px 0",
+                                borderBottom:
+                                  idx < order.items.length - 1
+                                    ? "1px solid rgba(255,255,255,0.05)"
+                                    : "none",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "13px",
+                                  color: "rgba(255,255,255,0.8)",
+                                }}
+                              >
+                                {item.name}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#E8441A",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                x{item.quantity}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <span
+                            style={{
+                              color: "rgba(255,255,255,0.4)",
+                              fontSize: "12px",
+                            }}
+                          >
+                            No items
+                          </span>
+                        )}
+                      </td>
                       <td style={{ color: "#E8441A", fontWeight: "700" }}>
                         ${order.total_amount}
                       </td>
-                      <td>
+                      <td
+                        style={{
+                          fontSize: "13px",
+                          color: "rgba(255,255,255,0.6)",
+                        }}
+                      >
                         {new Date(order.created_at).toLocaleDateString(
                           "en-US",
-                          { year: "numeric", month: "short", day: "numeric" },
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
                         )}
                       </td>
                       <td>

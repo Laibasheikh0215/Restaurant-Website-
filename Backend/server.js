@@ -539,41 +539,33 @@ app.post(
 );
 
 // ORDER ROUTES 
-app.post("/api/orders", authMiddleware, async (req, res) => {
-  try {
-    const { items, total_amount } = req.body;
-    if (!items || items.length === 0)
-      return res.status(400).json({ error: "No items in order" });
-
-    const orderResult = await pool.query(
-      `INSERT INTO orders (user_id, total_amount, status, order_date) VALUES ($1, $2, 'pending', CURRENT_DATE) RETURNING id`,
-      [req.user.id, total_amount],
-    );
-    const orderId = orderResult.rows[0].id;
-
-    for (const item of items) {
-      await pool.query(
-        `INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)`,
-        [orderId, item.id, item.quantity, item.price],
-      );
+app.get("/api/admin/orders", authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT o.*, u.full_name, u.email,
+             COALESCE(
+                 json_agg(
+                     json_build_object(
+                         'name', mi.name,
+                         'quantity', oi.quantity,
+                         'price', oi.price,
+                         'id', oi.menu_item_id
+                     ) ORDER BY oi.id
+                 ) FILTER (WHERE mi.id IS NOT NULL),
+                 '[]'
+             ) as items
+             FROM orders o 
+             JOIN users u ON o.user_id = u.id 
+             LEFT JOIN order_items oi ON o.id = oi.order_id
+             LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
+             GROUP BY o.id, u.id
+             ORDER BY o.created_at DESC`
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ error: error.message });
     }
-
-    const userResult = await pool.query(
-      "SELECT email, full_name FROM users WHERE id = $1",
-      [req.user.id],
-    );
-    const emailHtml = `<h1>Order Received</h1><p>Dear ${userResult.rows[0].full_name},</p><p>Your order #${orderId} has been received!</p><p><strong>Total: $${total_amount}</strong></p>`;
-    await sendConfirmationEmail(
-      userResult.rows[0].email,
-      "Order Received",
-      emailHtml,
-    );
-
-    res.json({ success: true, order_id: orderId });
-  } catch (error) {
-    console.error("Order error:", error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 app.get("/api/orders/my-orders", authMiddleware, async (req, res) => {
